@@ -19,9 +19,12 @@ that behave alike. All numbers come from `benchmark/results/analysis.json`.
 
 ## What this revision contains
 
-This is the ICML 2027 working manuscript (supplied style unchanged) together
-with the code and records of the executed study. The paper's numbers are
-generated from the files in `benchmark/` by the scripts in `scripts/`.
+This repository holds the code and records of the study behind the ICML 2027
+working manuscript. The manuscript itself is maintained on Overleaf. Every
+number in the paper is generated from the files in `benchmark/` by the scripts
+in `scripts/`: `make_tables.py` writes the paper's tables and number macros to
+`sections/generated/`, and `make_figures.py` writes its figures to `figures/`.
+Copy those two folders into the Overleaf project after rerunning the analysis.
 
 **Completed at full scale**
 
@@ -71,8 +74,6 @@ generated from the files in `benchmark/` by the scripts in `scripts/`.
 ## Repository layout
 
 ```
-main.tex, sections/            manuscript (sections/generated/ is written by scripts/make_tables.py)
-figures/                       figures (scripts/make_figures.py)
 benchmark/configurations/      54 configuration decks
 benchmark/resolved_decks.zip   5,400 resolved JSON/text decks
 benchmark/ic_parameter_bank.json
@@ -105,9 +106,8 @@ python scripts/run_embeddings.py --model qwen3vl2b --tasks reversal,notation,mis
 #   (same for gme2b and embeddinggemma2; set PDE_MODEL_ROOT to the HF cache)
 python scripts/exponax_crosscheck.py                 # in a jax/exponax environment
 python scripts/analysis.py --data DATA               # writes benchmark/results/analysis.json
-python scripts/make_tables.py
-python scripts/make_figures.py DATA '[["qwen3vl2b","text","Qwen3-VL text"],["gme2b","image","GME image"],["qwen3vl2b","image","Qwen3-VL image"],["embeddinggemma2","image","EmbGemma 2 image"]]'
-latexmk -pdf -interaction=nonstopmode -halt-on-error main.tex
+python scripts/make_tables.py                        # -> sections/generated/ (for the paper)
+python scripts/make_figures.py DATA '[["qwen3vl2b","text","Qwen3-VL text"],["gme2b","image","GME image"],["qwen3vl2b","image","Qwen3-VL image"],["embeddinggemma2","image","EmbGemma 2 image"]]'   # -> figures/
 ```
 
 **Full-scale embedding run:** `run_embeddings.py --realizations 100` (and

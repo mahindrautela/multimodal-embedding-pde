@@ -12,3 +12,6 @@ __pycache__/
 *.pyc
 # Large regenerated data (see README)
 data/
+# Paper outputs (the manuscript lives on Overleaf)
+sections/
+figures/
