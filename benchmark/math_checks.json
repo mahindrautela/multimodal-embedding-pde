@@ -1,11 +1,7 @@
 {
-  "status": "analytical calibration and numerical consistency checks only",
-  "production_trajectories_generated": false,
-  "embedding_inference_performed": false,
-  "numpy": "2.3.5",
-  "scipy": "1.17.0",
-  "formal_verification": false,
-  "continuum_heat_calibration": [
+  "numpy": "2.5.3",
+  "scipy": "1.18.1",
+  "heat_calibration": [
     {
       "anchor_nu": 0.01,
       "candidate_nu": 0.011,
@@ -27,16 +23,24 @@
   ],
   "n64_laplacian_eigenvalue_max_abs_error": {
     "periodic": 1.0913936421275139e-11,
-    "dirichlet": 5.4569682106375694e-12,
-    "neumann": 9.094947017729282e-12
+    "dirichlet_zero": 5.4569682106375694e-12,
+    "neumann_zero": 9.094947017729282e-12
   },
-  "linear_exchange_mode_vs_full_exponential_max_error": {
-    "periodic": 6.661338147750939e-16,
-    "dirichlet": 1.887379141862766e-15,
-    "neumann": 6.661338147750939e-16
+  "exact_linear_reference_vs_full_expm_n8": {
+    "diffusion/periodic": 8.881784197001252e-16,
+    "diffusion/dirichlet_zero": 6.661338147750939e-16,
+    "diffusion/neumann_zero": 5.551115123125783e-16,
+    "advection_diffusion/periodic": 1.1102230246251565e-15,
+    "advection_diffusion/dirichlet_zero": 1.3600232051658168e-15,
+    "advection_diffusion/neumann_zero": 1.4432899320127035e-15,
+    "linear_exchange/periodic": 1.3322676295501878e-15,
+    "linear_exchange/dirichlet_zero": 3.774758283725532e-15,
+    "linear_exchange/neumann_zero": 1.304512053934559e-15
   },
-  "raw_kernel_identity_max_error": 4.440892098500626e-16,
-  "paired_embedding_chord_max_error": 8.881784197001252e-16,
-  "resolved_random_ranking_margins_checked": 1318,
+  "identity_max_errors": {
+    "gram_distance_identity": 1.3322676295501878e-15,
+    "embedding_chord_identity": 4.440892098500626e-16
+  },
+  "margin_rule_resolved_triplets": 1323,
   "passed": true
 }

@@ -1,10 +1,22 @@
-"""Reproduce mathematical calibration values and finite-dimensional checks.
+#!/usr/bin/env python3
+"""Numerical checks of the math behind the reference distance (writes benchmark/math_checks.json).
 
-This script does not generate the production PDE dataset or run encoders.
-It checks identities numerically; it is not interval arithmetic or formal proof.
+1. Heat calibration: the closed-form distances between heat solutions with
+   nu = 0.01 and nu in {0.011, 0.02, 0.05} (the heat control in the paper).
+2. The 64-point 1D Laplacian matrices have the eigenvalues used by the solver.
+3. The exact linear solutions in simulator.py match a brute-force matrix
+   exponential of the whole grid system (n = 8, all linear PDEs and BCs).
+4. Two algebraic identities: squared RMS distance from Gram matrices, and
+   squared chord distance between unit embeddings = 2 - 2 * score.
+5. The error-margin rule for triplets never resolves a triplet the wrong way
+   when the error of every item is known.
+
+These are floating-point checks, not proofs.
 """
 from __future__ import annotations
 
+import argparse
+import itertools
 import json
 from pathlib import Path
 
@@ -12,129 +24,134 @@ import numpy as np
 import scipy
 from scipy.linalg import eigh, expm
 
-ROOT = Path(__file__).resolve().parents[1]
+import simulator as S
+from controls import HEAT_ANCHOR, HEAT_CANDIDATES
+
+REPO = Path(__file__).resolve().parents[1]
+FIVE_FRAMES = [0, 25, 50, 74, 99]
 
 
-def laplacian_1d(n: int, bc: str) -> np.ndarray:
-    mat = np.diag(np.full(n, -2.0))
-    mat += np.diag(np.ones(n - 1), 1) + np.diag(np.ones(n - 1), -1)
-    if bc == "periodic":
-        mat[0, -1] = mat[-1, 0] = 1.0
-    elif bc == "dirichlet":
-        mat[0, 0] = mat[-1, -1] = -3.0
-    elif bc == "neumann":
-        mat[0, 0] = mat[-1, -1] = -1.0
-    else:
-        raise ValueError(bc)
-    return mat * n**2
+def heat_calibration() -> list[dict]:
+    """Exact RMS distance between two heat solutions u = exp(-2 pi^2 nu t) sin(pi x) sin(pi y).
 
-
-def mode_reference(initial, bc, times, diffusivities, reaction):
-    """Exact semidiscrete linear evolution, apart from floating-point error."""
-    n = initial.shape[-1]
-    lam, vec = eigh(laplacian_1d(n, bc))
-    coeff = np.einsum("xa,cxy,yb->cab", vec, initial, vec)
-    states = []
-    for t in times:
-        evolved = np.empty_like(coeff)
-        for a in range(n):
-            for b in range(n):
-                generator = (lam[a] + lam[b]) * np.diag(diffusivities) + reaction
-                evolved[:, a, b] = expm(t * generator) @ coeff[:, a, b]
-        states.append(np.einsum("xa,cab,yb->cxy", vec, evolved, vec))
-    return np.array(states)
-
-
-def main():
-    rng = np.random.default_rng(20261118)
-    report = {
-        "status": "analytical calibration and numerical consistency checks only",
-        "production_trajectories_generated": False,
-        "embedding_inference_performed": False,
-        "numpy": np.__version__,
-        "scipy": scipy.__version__,
-        "formal_verification": False,
-    }
-
-    # Closed-form continuum heat calibration; uniform observation weights.
-    calibration = []
-    for nu in (0.011, 0.020, 0.050):
-        row = {"anchor_nu": 0.01, "candidate_nu": nu}
-        for name, idx in (("five_frames", [0, 25, 50, 74, 99]),
-                          ("all_100_frames", np.arange(100))):
-            t = np.asarray(idx) / 99.0
-            delta = np.exp(-2 * np.pi**2 * 0.01 * t) - np.exp(-2 * np.pi**2 * nu * t)
+    The factor 0.5 is the RMS of sin(pi x) sin(pi y) over the unit square.
+    """
+    rows = []
+    for nu in HEAT_CANDIDATES:
+        row = {"anchor_nu": HEAT_ANCHOR, "candidate_nu": nu}
+        for name, frames in (("five_frames", FIVE_FRAMES), ("all_100_frames", np.arange(100))):
+            t = np.asarray(frames) / 99.0
+            delta = np.exp(-2 * np.pi**2 * HEAT_ANCHOR * t) - np.exp(-2 * np.pi**2 * nu * t)
             row[name] = float(0.5 * np.sqrt(np.mean(delta**2)))
-        calibration.append(row)
-    report["continuum_heat_calibration"] = calibration
+        rows.append(row)
+    return rows
 
-    # Cell-centered stencils must match the exact eigenvalue formulas used.
+
+def laplacian_eigenvalue_errors(n: int = 64) -> dict[str, float]:
+    """Largest gap between the eigenvalues of the dense matrix and the closed-form formula."""
     errors = {}
-    n = 64
-    for bc in ("periodic", "dirichlet", "neumann"):
-        k = np.arange(1, n + 1) if bc == "dirichlet" else np.arange(n)
-        denominator = n if bc == "periodic" else 2 * n
-        expected = np.sort(-4 * n**2 * np.sin(np.pi * k / denominator)**2)
-        actual = eigh(laplacian_1d(n, bc), eigvals_only=True)
-        errors[bc] = float(np.max(np.abs(expected - actual)))
+    for bc in S.BCS:
+        if bc == "periodic":
+            expected = -4 * n**2 * np.sin(np.pi * np.arange(n) / n) ** 2
+        else:
+            k = np.arange(1, n + 1) if bc == "dirichlet_zero" else np.arange(n)
+            expected = -4 * n**2 * np.sin(np.pi * k / (2 * n)) ** 2
+        expected = np.sort(expected)
+        actual = eigh(S.dense_laplacian_1d(n, bc), eigvals_only=True)
         np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=3e-11)
-    report["n64_laplacian_eigenvalue_max_abs_error"] = errors
+        errors[bc] = float(np.max(np.abs(expected - actual)))
+    return errors
 
-    # Noncommuting channel diffusion/reaction: mode evolution vs the full matrix.
-    n = 6
-    initial = rng.uniform(0.0, 0.8, size=(2, n, n))
-    diff = np.array([0.01, 0.005])
-    reaction = 0.5 * np.array([[-1.0, 1.0], [1.0, -1.0]])
-    times = np.array([0.0, 0.25, 1.0])
-    linear_errors = {}
-    for bc in ("periodic", "dirichlet", "neumann"):
-        L = laplacian_1d(n, bc)
-        L2 = np.kron(L, np.eye(n)) + np.kron(np.eye(n), L)
-        A = np.kron(np.diag(diff), L2) + np.kron(reaction, np.eye(n * n))
-        direct = np.stack([(expm(t * A) @ initial.ravel()).reshape(initial.shape) for t in times])
-        modes = mode_reference(initial, bc, times, diff, reaction)
-        linear_errors[bc] = float(np.max(np.abs(direct - modes)))
-        np.testing.assert_allclose(modes, direct, rtol=2e-12, atol=2e-13)
-    report["linear_exchange_mode_vs_full_exponential_max_error"] = linear_errors
 
-    # The physical and embedding identities use distinct normalizations.
+def full_system_matrix(pde: str, bc: str, n: int) -> np.ndarray:
+    """The whole linear grid system for both fields as one (2 n^2) x (2 n^2) matrix."""
+    p = S.PDE_COEFFICIENTS[pde]
+    A = S.dense_laplacian_1d(n, bc)
+    G = S.dense_gradient_1d(n, bc)
+    I = np.eye(n)
+    full = np.zeros((2 * n * n, 2 * n * n))
+    for c, nu in enumerate((p["D_u"], p["D_v"])):
+        Ax, Ay = nu * A, nu * A
+        if pde == "advection_diffusion":
+            Ax, Ay = Ax - p["c_x"] * G, Ay - p["c_y"] * G
+        block = slice(c * n * n, (c + 1) * n * n)
+        full[block, block] = np.kron(Ax, I) + np.kron(I, Ay)
+    if pde == "linear_exchange":
+        full += np.kron(p["kappa"] * np.array([[-1.0, 1.0], [1.0, -1.0]]), np.eye(n * n))
+    return full
+
+
+def exact_reference_errors(rng: np.random.Generator, n: int = 8) -> dict[str, float]:
+    """simulator.exact_linear_reference vs expm of the full system matrix."""
+    U0 = rng.uniform(0, 0.8, size=(2, 2, n, n))
+    times = np.array([0.0, 0.3, 1.0])
+    errors = {}
+    for pde in ("diffusion", "advection_diffusion", "linear_exchange"):
+        for bc in S.BCS:
+            full = full_system_matrix(pde, bc, n)
+            direct = np.stack([np.stack([(expm(t * full) @ u.ravel()).reshape(2, n, n) for t in times])
+                               for u in U0])
+            exact = S.exact_linear_reference(pde, bc, U0, times)
+            errors[f"{pde}/{bc}"] = float(np.abs(exact - direct).max())
+    assert max(errors.values()) < 1e-13
+    return errors
+
+
+def identity_errors(rng: np.random.Generator) -> dict[str, float]:
+    """Gram-matrix distance identity and the embedding chord identity."""
     profiles = rng.normal(size=(6, 7, 5, 2, 4, 4))
     flat = profiles.reshape(6, -1) / np.sqrt(np.prod(profiles.shape[1:]))
-    kernel = flat @ flat.T
+    gram = flat @ flat.T
     distances = np.linalg.norm(flat[:, None] - flat[None, :], axis=-1)
-    identity = kernel.diagonal()[:, None] + kernel.diagonal()[None, :] - 2 * kernel
-    np.testing.assert_allclose(distances**2, identity, atol=2e-15)
-    z = rng.normal(size=(6, 7, 13))
+    from_gram = gram.diagonal()[:, None] + gram.diagonal()[None, :] - 2 * gram
+    np.testing.assert_allclose(distances**2, from_gram, atol=2e-15)
+
+    z = rng.normal(size=(6, 7, 13))                      # 6 problems, 7 samples, 13 dims
     z /= np.linalg.norm(z, axis=-1, keepdims=True)
     score = np.einsum("ird,jrd->ij", z, z) / z.shape[1]
-    chord2 = np.mean(np.sum((z[:, None] - z[None, :])**2, axis=-1), axis=-1)
+    chord2 = np.mean(np.sum((z[:, None] - z[None, :]) ** 2, axis=-1), axis=-1)
     np.testing.assert_allclose(chord2, 2 - 2 * score, atol=2e-15)
     assert np.linalg.eigvalsh(score).min() >= -1e-12
-    report["raw_kernel_identity_max_error"] = float(np.max(np.abs(distances**2 - identity)))
-    report["paired_embedding_chord_max_error"] = float(np.max(np.abs(chord2 - (2 - 2 * score))))
+    return {"gram_distance_identity": float(np.max(np.abs(distances**2 - from_gram))),
+            "embedding_chord_identity": float(np.max(np.abs(chord2 - (2 - 2 * score))))}
 
-    # Known perturbation norms supply genuine finite-dimensional error bounds.
+
+def margin_rule_check(rng: np.random.Generator) -> int:
+    """With known errors eps, every triplet the margin rule resolves has the correct order.
+
+    Returns the number of resolved triplets.
+    """
     true = rng.normal(size=(15, 20))
-    approximate = true + 0.002 * rng.normal(size=true.shape)
-    eps = np.linalg.norm(true - approximate, axis=1)
+    approx = true + 0.002 * rng.normal(size=true.shape)
+    eps = np.linalg.norm(true - approx, axis=1)
     exact_d = np.linalg.norm(true[:, None] - true[None, :], axis=-1)
-    approx_d = np.linalg.norm(approximate[:, None] - approximate[None, :], axis=-1)
-    bound = eps[:, None] + eps[None, :]
-    assert np.all(np.abs(exact_d - approx_d) <= bound + 1e-13)
+    approx_d = np.linalg.norm(approx[:, None] - approx[None, :], axis=-1)
+    assert np.all(np.abs(exact_d - approx_d) <= eps[:, None] + eps[None, :] + 1e-13)
     resolved = 0
-    for i in range(len(true)):
-        for j in range(len(true)):
-            for k in range(len(true)):
-                if len({i, j, k}) < 3:
-                    continue
-                if approx_d[i, k] - approx_d[i, j] > 2 * eps[i] + eps[j] + eps[k]:
-                    assert exact_d[i, j] < exact_d[i, k]
-                    resolved += 1
+    for i, j, k in itertools.permutations(range(len(true)), 3):
+        if approx_d[i, k] - approx_d[i, j] > 2 * eps[i] + eps[j] + eps[k]:
+            assert exact_d[i, j] < exact_d[i, k]
+            resolved += 1
     assert resolved > 0
-    report["resolved_random_ranking_margins_checked"] = resolved
-    report["passed"] = True
-    out = ROOT / "benchmark" / "math_checks.json"
-    out.write_text(json.dumps(report, indent=2) + "\n")
+    return resolved
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--output", type=Path, default=REPO / "benchmark" / "math_checks.json")
+    args = parser.parse_args()
+    rng = np.random.default_rng(20261118)
+    report = {
+        "numpy": np.__version__,
+        "scipy": scipy.__version__,
+        "heat_calibration": heat_calibration(),
+        "n64_laplacian_eigenvalue_max_abs_error": laplacian_eigenvalue_errors(),
+        "exact_linear_reference_vs_full_expm_n8": exact_reference_errors(rng),
+        "identity_max_errors": identity_errors(rng),
+        "margin_rule_resolved_triplets": margin_rule_check(rng),
+        "passed": True,
+    }
+    args.output.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report, indent=2))
 
 

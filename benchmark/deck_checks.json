@@ -1,16 +1,15 @@
 {
   "status": "passed",
-  "numpy_version": "2.3.5",
+  "numpy_version": "2.5.3",
   "base_seed": 20261118,
   "configuration_json_decks": 54,
-  "resolved_json_decks_written_this_run": 5400,
-  "resolved_text_decks_written_this_run": 5400,
+  "resolved_decks_written_this_run": 5400,
   "ic_parameter_records": {
     "single_gaussian": 100,
     "low_frequency": 100,
     "patch_mixture": 100
   },
-  "initial_arrays_evaluated_for_checks": 300,
+  "initial_arrays_checked": 300,
   "initial_array_shape": [
     2,
     64,
@@ -20,7 +19,7 @@
   "all_arrays_finite_and_between_0_and_0_8": true,
   "exact_zero_sampled_boundary_values": true,
   "parameter_and_array_replay_identical": true,
-  "resolved_model_inputs_exclude_provenance_labels": true,
+  "model_inputs_exclude_provenance_labels": true,
   "ic_bounds": {
     "single_gaussian": {
       "minimum": 9.130663253424761e-145,
@@ -38,7 +37,5 @@
       "example_sha256_float64": "68f19ae96d75314b35431d0427cdeaf0be5822579c1567cdf07e4f49192ca861"
     }
   },
-  "simulations_run": false,
-  "embedding_inference_run": false,
-  "note": "Boundary derivatives vanish by construction; sampled boundary values are a numerical check. Hashes describe this NumPy/platform execution. Existing unrelated files are not deleted."
+  "note": "Boundary derivatives vanish by construction; sampled boundary values are a numerical check. Hashes describe this NumPy/platform execution."
 }

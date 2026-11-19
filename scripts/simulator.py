@@ -1,23 +1,30 @@
-#!/usr/bin/env python3
-"""Common cell-centered finite-difference simulator for the six benchmark PDEs.
+"""One finite-difference solver for all six PDEs and all three boundary conditions.
 
-All six classes share one spatial discretization and one time integrator:
+Every equation has the form  dU/dt = D * Laplacian(U) + G(U, grad U)  for the
+two fields U = (u, v). The solver works as follows.
 
-* Grid: n x n cell centers x_p=(p+1/2)/n on [0,1]^2, array axes (channel, x, y).
-* Laplacian: centered five-point stencil with BC-specific ghost values
-  (periodic wrap; Dirichlet ghost = -interior; Neumann ghost = interior).
-  This matrix is diagonalized exactly by the real FFT (periodic), the
-  orthonormal DST-II (Dirichlet) or the orthonormal DCT-II (Neumann).
-* First derivatives (advection only): centered differences with the same
-  ghost values.
-* Time integration: ETDRK4 (Cox--Matthews), with the diffusion operator
-  D*Laplacian treated exactly in its eigenbasis and every other term
-  (advection, exchange, reactions) treated explicitly. The phi-function
-  coefficients are evaluated by the Kassam--Trefethen contour integral.
-  Each output interval 1/99 is divided into ``substeps`` equal steps, so the
-  saved times are hit exactly.
+Grid
+    n x n cell centers x_p = (p + 1/2)/n on [0, 1]^2. Arrays are ordered
+    (field, x, y), with any batch dimensions in front.
 
-Everything is computed in float64. Callers decide how to store outputs.
+Space
+    Laplacian: the five-point stencil. At the boundary it uses one layer of
+    "ghost" values: periodic wraps around, zero Dirichlet uses minus the
+    neighbour, zero Neumann copies the neighbour. For each BC this matrix is
+    diagonalized exactly by a fast transform (real FFT, DST-II or DCT-II), so
+    diffusion can be solved exactly in that basis.
+    Advection uses centered first differences with the same ghost values.
+
+Time
+    ETDRK4 (Cox & Matthews 2002) with the phi-functions evaluated by the
+    contour integral of Kassam & Trefethen (2005). Diffusion is treated
+    exactly; advection, exchange and reaction terms are treated explicitly.
+    Each output interval 1/99 is split into `substeps` equal steps, so the
+    saved times are hit exactly.
+
+Everything is computed in float64; callers decide how to store results.
+The file also provides exact solutions of the grid equations for the three
+linear PDEs, used to measure the time-stepping error.
 """
 from __future__ import annotations
 
@@ -25,17 +32,14 @@ from dataclasses import dataclass
 
 import numpy as np
 from scipy import fft as sfft
+from scipy.linalg import eigh, expm
 
-PDE_COEFFICIENTS = {
-    "diffusion": {"D_u": 0.01, "D_v": 0.005},
-    "advection_diffusion": {"D_u": 0.01, "D_v": 0.005, "c_x": 0.25, "c_y": 0.10},
-    "linear_exchange": {"D_u": 0.01, "D_v": 0.005, "kappa": 0.5},
-    "fisher_kpp": {"D_u": 0.01, "D_v": 0.005, "r": 1.0},
-    "shifted_allen_cahn": {"D_u": 0.01, "D_v": 0.005, "a": 4.0},
-    "gray_scott": {"D_u": 0.01, "D_v": 0.005, "F": 0.04, "k": 0.06},
-}
+from make_decks import BOUNDARIES, PDE_SPECS
+
+# Coefficients are defined once, in make_decks.py, and shared with the decks.
+PDE_COEFFICIENTS = {pde: spec["parameters"] for pde, spec in PDE_SPECS.items()}
 PDES = list(PDE_COEFFICIENTS)
-BCS = ["periodic", "dirichlet_zero", "neumann_zero"]
+BCS = list(BOUNDARIES)
 N_STATES = 100
 T_FINAL = 1.0
 SOLVER_NAME = "cc-fd-etdrk4"
@@ -43,35 +47,37 @@ SOLVER_VERSION = "1.0.0"
 
 
 # ---------------------------------------------------------------------------
-# Spatial operators
+# Laplacian eigenvalues and the matching fast transforms
 # ---------------------------------------------------------------------------
 def eigenvalues_1d(n: int, bc: str) -> np.ndarray:
-    """Eigenvalues of the 1D cell-centered stencil, in transform-coefficient order."""
+    """Eigenvalues of the 1D stencil, in the order of the transform coefficients."""
     h2 = float(n) ** 2
     if bc == "periodic":
-        k = np.arange(n // 2 + 1)  # rfft order along the last axis
+        k = np.arange(n // 2 + 1)                  # rfft keeps the first n//2 + 1 modes
         return -4.0 * h2 * np.sin(np.pi * k / n) ** 2
     if bc == "dirichlet_zero":
-        k = np.arange(1, n + 1)  # DST-II coefficient j <-> mode j+1
+        k = np.arange(1, n + 1)                    # DST-II coefficient j is mode j + 1
         return -4.0 * h2 * np.sin(np.pi * k / (2 * n)) ** 2
     if bc == "neumann_zero":
-        k = np.arange(n)
+        k = np.arange(n)                           # DCT-II coefficient j is mode j
         return -4.0 * h2 * np.sin(np.pi * k / (2 * n)) ** 2
     raise ValueError(bc)
 
 
 def eigenvalues_2d(n: int, bc: str) -> np.ndarray:
-    """2D eigenvalue array matching the layout of ``forward``'s output."""
+    """2D eigenvalues laid out like the output of `forward`."""
     if bc == "periodic":
+        # Full FFT along x (axis -2), real FFT along y (axis -1).
         kx = np.arange(n)
-        lam_x = -4.0 * n**2 * np.sin(np.pi * kx / n) ** 2  # full fft order on axis -2
-        lam_y = eigenvalues_1d(n, bc)  # rfft order on axis -1
+        lam_x = -4.0 * n**2 * np.sin(np.pi * kx / n) ** 2
+        lam_y = eigenvalues_1d(n, bc)
         return lam_x[:, None] + lam_y[None, :]
     lam = eigenvalues_1d(n, bc)
     return lam[:, None] + lam[None, :]
 
 
 def forward(field: np.ndarray, bc: str) -> np.ndarray:
+    """Grid values -> Laplacian eigen-coefficients (orthonormal transforms)."""
     if bc == "periodic":
         return sfft.rfftn(field, axes=(-2, -1), norm="ortho")
     if bc == "dirichlet_zero":
@@ -82,6 +88,7 @@ def forward(field: np.ndarray, bc: str) -> np.ndarray:
 
 
 def inverse(coeff: np.ndarray, bc: str, n: int) -> np.ndarray:
+    """Laplacian eigen-coefficients -> grid values."""
     if bc == "periodic":
         return sfft.irfftn(coeff, s=(n, n), axes=(-2, -1), norm="ortho")
     if bc == "dirichlet_zero":
@@ -91,17 +98,22 @@ def inverse(coeff: np.ndarray, bc: str, n: int) -> np.ndarray:
     raise ValueError(bc)
 
 
+# ---------------------------------------------------------------------------
+# Stencils with ghost values
+# ---------------------------------------------------------------------------
 def pad_ghost(field: np.ndarray, bc: str) -> np.ndarray:
-    """Add one ghost layer on both spatial axes using the BC rule."""
+    """Add one layer of ghost values around both spatial axes."""
+    widths = [(0, 0)] * (field.ndim - 2) + [(1, 1), (1, 1)]
     if bc == "periodic":
-        return np.pad(field, [(0, 0)] * (field.ndim - 2) + [(1, 1), (1, 1)], mode="wrap")
-    padded = np.pad(field, [(0, 0)] * (field.ndim - 2) + [(1, 1), (1, 1)], mode="edge")
+        return np.pad(field, widths, mode="wrap")
+    padded = np.pad(field, widths, mode="edge")    # ghost = neighbour (Neumann)
     if bc == "dirichlet_zero":
+        # ghost = -neighbour, so the value midway between them is zero.
+        # The corner ghosts are never used by the stencils below.
         padded[..., 0, :] *= -1.0
         padded[..., -1, :] *= -1.0
         padded[..., :, 0] *= -1.0
         padded[..., :, -1] *= -1.0
-        # Corner ghosts are never used by the five-point or centered stencils.
         return padded
     if bc == "neumann_zero":
         return padded
@@ -109,15 +121,15 @@ def pad_ghost(field: np.ndarray, bc: str) -> np.ndarray:
 
 
 def laplacian_stencil(field: np.ndarray, bc: str) -> np.ndarray:
-    """Direct five-point stencil (used only for validation)."""
+    """Five-point Laplacian applied directly (used only to validate the transforms)."""
     n = field.shape[-1]
     g = pad_ghost(field, bc)
-    c = g[..., 1:-1, 1:-1]
-    return (g[..., 2:, 1:-1] + g[..., :-2, 1:-1] + g[..., 1:-1, 2:] + g[..., 1:-1, :-2] - 4.0 * c) * n**2
+    center = g[..., 1:-1, 1:-1]
+    return (g[..., 2:, 1:-1] + g[..., :-2, 1:-1] + g[..., 1:-1, 2:] + g[..., 1:-1, :-2] - 4.0 * center) * n**2
 
 
 def gradient(field: np.ndarray, bc: str) -> tuple[np.ndarray, np.ndarray]:
-    """Centered first differences (d/dx along axis -2, d/dy along axis -1)."""
+    """Centered first differences: (d/dx along axis -2, d/dy along axis -1)."""
     n = field.shape[-1]
     g = pad_ghost(field, bc)
     dx = (g[..., 2:, 1:-1] - g[..., :-2, 1:-1]) * (n / 2.0)
@@ -126,11 +138,11 @@ def gradient(field: np.ndarray, bc: str) -> tuple[np.ndarray, np.ndarray]:
 
 
 # ---------------------------------------------------------------------------
-# Explicit terms G(U, grad U)
+# The explicit part G(U, grad U) of each PDE
 # ---------------------------------------------------------------------------
-def explicit_term(pde: str, U: np.ndarray, bc: str, coefficients: dict | None = None) -> np.ndarray:
-    """U has shape [..., 2, n, n]; returns G with the same shape."""
-    p = PDE_COEFFICIENTS[pde] if coefficients is None else coefficients
+def explicit_term(pde: str, U: np.ndarray, bc: str) -> np.ndarray:
+    """G for fields U of shape [..., 2, n, n]; returns the same shape."""
+    p = PDE_COEFFICIENTS[pde]
     u, v = U[..., 0, :, :], U[..., 1, :, :]
     if pde == "diffusion":
         return np.zeros_like(U)
@@ -150,12 +162,13 @@ def explicit_term(pde: str, U: np.ndarray, bc: str, coefficients: dict | None = 
 
 
 # ---------------------------------------------------------------------------
-# ETDRK4
+# ETDRK4 time stepping
 # ---------------------------------------------------------------------------
 @dataclass
 class ETDCoefficients:
-    E: np.ndarray
-    E2: np.ndarray
+    """Per-mode multipliers of one ETDRK4 step of size h (names as in Kassam & Trefethen)."""
+    E: np.ndarray      # exp(h L)
+    E2: np.ndarray     # exp(h L / 2)
     Q: np.ndarray
     f1: np.ndarray
     f2: np.ndarray
@@ -163,7 +176,11 @@ class ETDCoefficients:
 
 
 def etdrk4_coefficients(L: np.ndarray, h: float, contour_points: int = 64) -> ETDCoefficients:
-    """Kassam--Trefethen contour-integral evaluation for a real diagonal operator L."""
+    """Evaluate the ETDRK4 phi-functions for a real diagonal operator L.
+
+    The averages over points on a unit circle around each h*L avoid the
+    cancellation that the direct formulas suffer from when h*L is small.
+    """
     hL = h * L
     r = np.exp(1j * np.pi * (np.arange(1, contour_points + 1) - 0.5) / contour_points)
     LR = hL[..., None] + r
@@ -176,82 +193,85 @@ def etdrk4_coefficients(L: np.ndarray, h: float, contour_points: int = 64) -> ET
 
 
 def simulate(pde: str, bc: str, U0: np.ndarray, substeps: int = 4, n_states: int = N_STATES,
-             t_final: float = T_FINAL, coefficients: dict | None = None,
-             save_indices: list[int] | None = None) -> np.ndarray:
+             t_final: float = T_FINAL, save_indices: list[int] | None = None) -> np.ndarray:
     """Integrate a batch of initial conditions.
 
-    U0: float array [B, 2, n, n] (or [2, n, n]). Returns float64
-    [B, n_saved, 2, n, n] at t_k = k*t_final/(n_states-1) for the requested
-    save indices (all states by default). Raises FloatingPointError on
-    non-finite values; nothing is clipped.
+    U0 has shape [B, 2, n, n] (or [2, n, n] for one sample). Returns float64
+    [B, n_saved, 2, n, n] at the times t_k = k * t_final / (n_states - 1) for
+    the requested indices k (all states by default). Raises FloatingPointError
+    if a saved state is not finite; nothing is ever clipped.
     """
-    squeeze = U0.ndim == 3
-    U = np.array(U0[None] if squeeze else U0, dtype=np.float64)
-    B, C, n, _ = U.shape
-    p = PDE_COEFFICIENTS[pde] if coefficients is None else coefficients
+    single = U0.ndim == 3
+    U = np.array(U0[None] if single else U0, dtype=np.float64)
+    batch, n_fields, n, _ = U.shape
+    p = PDE_COEFFICIENTS[pde]
+
+    # Diffusion operator in the eigenbasis: one diagonal per field.
     diffusivity = np.array([p["D_u"], p["D_v"]], dtype=np.float64)
-    lam = eigenvalues_2d(n, bc)
-    L = diffusivity[:, None, None] * lam[None]  # [2, kx, ky]
+    L = diffusivity[:, None, None] * eigenvalues_2d(n, bc)[None]
     h = t_final / (n_states - 1) / substeps
-    co = etdrk4_coefficients(L, h)
+    c = etdrk4_coefficients(L, h)
+
     save = list(range(n_states)) if save_indices is None else list(save_indices)
-    save_set = {k: i for i, k in enumerate(save)}
-    out = np.empty((B, len(save), C, n, n), dtype=np.float64)
+    slot = {k: i for i, k in enumerate(save)}          # saved index -> output position
+    out = np.empty((batch, len(save), n_fields, n, n), dtype=np.float64)
 
-    def N_hat(v_hat: np.ndarray) -> np.ndarray:
-        return forward(explicit_term(pde, inverse(v_hat, bc, n), bc, p), bc)
+    def explicit_hat(v_hat: np.ndarray) -> np.ndarray:
+        """G evaluated on the grid, returned in the eigenbasis."""
+        return forward(explicit_term(pde, inverse(v_hat, bc, n), bc), bc)
 
-    v = forward(U, bc)
-    if 0 in save_set:
-        out[:, save_set[0]] = U
-    linear_only = pde == "diffusion"
+    v = forward(U, bc)                                 # state in the eigenbasis
+    if 0 in slot:
+        out[:, slot[0]] = U
     for k in range(1, n_states):
         for _ in range(substeps):
-            if linear_only:
-                v = co.E * v
+            if pde == "diffusion":                     # no explicit part: exact update
+                v = c.E * v
                 continue
-            Nv = N_hat(v)
-            a = co.E2 * v + co.Q * Nv
-            Na = N_hat(a)
-            b = co.E2 * v + co.Q * Na
-            Nb = N_hat(b)
-            c = co.E2 * a + co.Q * (2 * Nb - Nv)
-            Nc = N_hat(c)
-            v = co.E * v + Nv * co.f1 + 2 * (Na + Nb) * co.f2 + Nc * co.f3
-        if k in save_set:
+            Nv = explicit_hat(v)
+            a = c.E2 * v + c.Q * Nv
+            Na = explicit_hat(a)
+            b = c.E2 * v + c.Q * Na
+            Nb = explicit_hat(b)
+            cc = c.E2 * a + c.Q * (2 * Nb - Nv)
+            Nc = explicit_hat(cc)
+            v = c.E * v + Nv * c.f1 + 2 * (Na + Nb) * c.f2 + Nc * c.f3
+        if k in slot:
             state = inverse(v, bc, n)
             if not np.isfinite(state).all():
                 raise FloatingPointError(f"non-finite state for {pde}/{bc} at saved index {k}")
-            out[:, save_set[k]] = state
-    return out[0] if squeeze else out
+            out[:, slot[k]] = state
+    return out[0] if single else out
 
 
 # ---------------------------------------------------------------------------
-# Exact semidiscrete references for the three linear classes
+# Exact solutions of the grid equations for the three linear PDEs
 # ---------------------------------------------------------------------------
 def dense_laplacian_1d(n: int, bc: str) -> np.ndarray:
+    """1D five-point Laplacian as a dense matrix, with the same ghost rules."""
     mat = np.diag(np.full(n, -2.0)) + np.diag(np.ones(n - 1), 1) + np.diag(np.ones(n - 1), -1)
     if bc == "periodic":
         mat[0, -1] = mat[-1, 0] = 1.0
     elif bc == "dirichlet_zero":
-        mat[0, 0] = mat[-1, -1] = -3.0
+        mat[0, 0] = mat[-1, -1] = -3.0             # -2 - 1 from the ghost -u_0
     elif bc == "neumann_zero":
-        mat[0, 0] = mat[-1, -1] = -1.0
+        mat[0, 0] = mat[-1, -1] = -1.0             # -2 + 1 from the ghost u_0
     else:
         raise ValueError(bc)
     return mat * n**2
 
 
 def dense_gradient_1d(n: int, bc: str) -> np.ndarray:
+    """1D centered first difference as a dense matrix, with the same ghost rules."""
     mat = (np.diag(np.ones(n - 1), 1) - np.diag(np.ones(n - 1), -1)) * (n / 2.0)
     if bc == "periodic":
         mat[0, -1] = -n / 2.0
         mat[-1, 0] = n / 2.0
     elif bc == "dirichlet_zero":
-        mat[0, 0] = n / 2.0   # -(ghost=-u0)
+        mat[0, 0] = n / 2.0                        # -(ghost) with ghost = -u_0
         mat[-1, -1] = -n / 2.0
     elif bc == "neumann_zero":
-        mat[0, 0] = -n / 2.0  # -(ghost=u0)
+        mat[0, 0] = -n / 2.0                       # -(ghost) with ghost = u_0
         mat[-1, -1] = n / 2.0
     else:
         raise ValueError(bc)
@@ -259,24 +279,24 @@ def dense_gradient_1d(n: int, bc: str) -> np.ndarray:
 
 
 def exact_linear_reference(pde: str, bc: str, U0: np.ndarray, times: np.ndarray) -> np.ndarray:
-    """Exact solution of the declared semidiscrete linear system (no time-stepping error).
+    """Exact solution of the grid equations (no time-stepping error).
 
-    U0: [B, 2, n, n]; returns [B, len(times), 2, n, n] in float64.
-    Diffusion/advection-diffusion use the Kronecker-sum identity
-    exp(t(A_x (+) A_y)) = exp(t A_x) (x) exp(t A_y) per channel; linear exchange
-    uses the symmetric Laplacian eigenbasis and a 2x2 matrix exponential per mode.
+    U0 has shape [B, 2, n, n]; returns float64 [B, len(times), 2, n, n].
+    Diffusion and advection-diffusion act separately along x and y, so each
+    field evolves as  exp(t A_x) U0 exp(t A_y)^T. Linear exchange couples the
+    two fields; it is solved mode by mode in the Laplacian eigenbasis with a
+    closed-form 2 x 2 matrix exponential.
     """
-    from scipy.linalg import eigh, expm
-
     U0 = np.asarray(U0, dtype=np.float64)
-    B, C, n, _ = U0.shape
+    batch, n_fields, n, _ = U0.shape
     p = PDE_COEFFICIENTS[pde]
     diffusivity = [p["D_u"], p["D_v"]]
-    out = np.empty((B, len(times), C, n, n))
+    out = np.empty((batch, len(times), n_fields, n, n))
     A = dense_laplacian_1d(n, bc)
+
     if pde in ("diffusion", "advection_diffusion"):
         G = dense_gradient_1d(n, bc)
-        for c in range(C):
+        for c in range(n_fields):
             Ax = diffusivity[c] * A
             Ay = diffusivity[c] * A
             if pde == "advection_diffusion":
@@ -286,13 +306,15 @@ def exact_linear_reference(pde: str, bc: str, U0: np.ndarray, times: np.ndarray)
                 Ex, Ey = expm(t * Ax), expm(t * Ay)
                 out[:, ti, c] = Ex @ U0[:, c] @ Ey.T
         return out
+
     if pde == "linear_exchange":
         lam, vec = eigh(A)
         coeff = np.einsum("xa,zcxy,yb->zcab", vec, U0, vec, optimize=True)
         lam2 = lam[:, None] + lam[None, :]
         kappa = p["kappa"]
         for ti, t in enumerate(times):
-            # Closed-form exp of the 2x2 generator t*(lam*diag(D) + R) for every mode.
+            # exp of the 2 x 2 matrix t * [[lam D_u - k, k], [k, lam D_v - k]] for every mode:
+            # exp(M) = e^m [cosh(d) I + sinh(d)/d (M - m I)], m = trace/2, d^2 = ((a11-a22)/2)^2 + k^2.
             a11 = t * (lam2 * diffusivity[0] - kappa)
             a22 = t * (lam2 * diffusivity[1] - kappa)
             off = t * kappa
@@ -308,4 +330,5 @@ def exact_linear_reference(pde: str, bc: str, U0: np.ndarray, times: np.ndarray)
             evolved = np.stack([M11 * c0 + M12 * c1, M12 * c0 + M22 * c1], axis=1)
             out[:, ti] = np.einsum("xa,zcab,yb->zcxy", vec, evolved, vec, optimize=True)
         return out
+
     raise ValueError(f"{pde} has no exact linear reference")

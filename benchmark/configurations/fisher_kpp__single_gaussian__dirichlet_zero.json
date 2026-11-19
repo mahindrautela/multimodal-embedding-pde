@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "configuration_id": "fisher_kpp__single_gaussian__dirichlet_zero",
   "pde_class": "fisher_kpp",
   "ic_family": "single_gaussian",
@@ -167,7 +167,7 @@
       0.7474747474747475,
       1.0
     ],
-    "internal_solver_steps": "not specified; output intervals are not solver steps"
+    "solver_steps": "see benchmark/frozen_protocol.json; output intervals are not solver steps"
   },
   "initial_condition": {
     "parameter_precision_decimal_places": 8,
@@ -182,7 +182,5 @@
     "shared_initial_arrays": "identical within each IC family across all PDEs and BCs",
     "cross_family_coupling": "same explicit (2,20) latent draw; documented parameter mapping"
   },
-  "solver_status": "not_run",
-  "embedding_status": "not_run",
   "model_input_text": "Equation:\n\\partial_t u=D_u\\Delta u+r\\,u(1-u),\\qquad \\partial_t v=D_v\\Delta v+r\\,v(1-v).\n\nParameters:\nD_u=0.01000000,\\quad D_v=0.00500000,\\quad r=1.00000000.\n\nInitial condition:\n\\eta(s)=\\begin{cases}\\exp\\!\\left(4-\\frac{1}{s(1-s)}\\right),&0<s<1,\\\\0,&s\\in\\{0,1\\}.\\end{cases}\nq(0,x,y)=\\alpha_q\\eta(x)\\eta(y)g_q(x,y),\\quad q\\in\\{u,v\\},\\quad \\alpha_q\\sim\\mathcal U[0.2,0.8].\ng_q(x,y)=\\exp\\!\\left[-\\frac{(x-\\mu_{x,q})^2+(y-\\mu_{y,q})^2}{2\\sigma_q^2}\\right],\\quad \\mu_{x,q},\\mu_{y,q}\\sim\\mathcal U[0.25,0.75],\\quad\\sigma_q\\sim\\mathcal U[0.08,0.18].\n\\text{Parameters are independently sampled between channels and rounded to eight decimal places.}\n\nBoundary:\nU(t,x,y)=0\\quad\\text{for }(x,y)\\in\\partial\\Omega.\n\nDomain:\n\\Omega=[0,1]^2,\\qquad U=(u,v)^\\top,\\qquad \\Delta=\\partial_{xx}+\\partial_{yy}.\\quad x_p=(p+\\tfrac12)/64,\\ y_q=(q+\\tfrac12)/64,\\ p,q=0,\\ldots,63.\n\nTime:\n0\\leq t\\leq1,\\qquad t_n=n/99,\\quad n=0,\\ldots,99.\\quad \\text{Observed frames: }n\\in\\{0,25,50,74,99\\}.\n"
 }

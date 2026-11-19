@@ -1,151 +1,157 @@
 #!/usr/bin/env python3
-"""Production run: all 54 configurations x 100 test realizations (r = 0..99).
+"""Main run: simulate all 54 problems for the test samples r = 0..99.
 
-Reads the frozen protocol (benchmark/frozen_protocol.json) and writes, under
---data (default /home/claude/data):
+Uses the settings in benchmark/frozen_protocol.json and writes
 
-  trajectories/five_frame/<config>.npy   float32 [100, 5, 2, 64, 64]
-  sheets/<config>__r<rrr>.png            five-frame contact sheets
-and, under benchmark/results/:
-  reference_terms.npz   per-realization squared distances and cosines
-                        (five-frame and all-100-frame) for the 54x54 matrix,
-                        plus per-trajectory numerical error terms
-  simulation_manifest.json  solver settings, checksums, diagnostics
+  under --data (default: data/):
+    trajectories/five_frame/<problem>.npy   float32 [samples, 5, 2, 64, 64]
+    sheets/<problem>__r<rrr>.png            the image inputs
+  under --out-dir (default: benchmark/results/):
+    reference_terms.npz       per-sample squared distances and cosines between
+                              all 54 problems (five frames and all 100 frames),
+                              and the numerical error of every trajectory
+    simulation_manifest.json  solver settings, checksums and value ranges
 
-The full 100-frame array (17.7 GB as float32) is not kept on disk; the
-SHA-256 of every 100-frame float32 trajectory is recorded so that a
-regenerated array can be audited bit-for-bit on the same platform.
+The full 100-frame arrays (17.7 GB in float32) are not kept. Instead the
+SHA-256 of every 100-frame float32 trajectory is recorded, so a rerun can be
+checked bit for bit on the same platform.
+
+Numerical error of each trajectory (squared, summed over fields and pixels):
+  linear PDEs     stored float32 result vs the exact grid solution
+  nonlinear PDEs  stored float32 result vs a run with half the time step;
+                  the difference between the two runs is kept as well
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import make_decks as M  # noqa: E402
-import render as R  # noqa: E402
-import simulator as S  # noqa: E402
-
-ROOT = Path(__file__).resolve().parents[1]
-LINEAR = {"diffusion", "advection_diffusion", "linear_exchange"}
+import simulator as S
+from common import (DATA_DIR, FAMILIES, GRID, LINEAR_PDES, NAMES, N_STATES, PROBLEMS, RESULTS,
+                    load_protocol, observation_times, sheet_ranges, initial_fields)
+from render import render_sheet, sheet_size
 
 
-def config_list():
-    return [(p, f, b) for p in S.PDES for f in M.FAMILIES for b in S.BCS]
+def squared_norm(x: np.ndarray) -> np.ndarray:
+    """Sum of squares over (field, x, y) and, if present, time; one value per sample."""
+    return np.sum(x**2, axis=tuple(range(1, x.ndim)))
+
+
+def gram_terms(states: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Squared distances and cosines between all problems for one sample.
+
+    states: [K, ...] values of the K problems. Computed in float64 through the
+    Gram matrix G: |a - b|^2 = G_aa + G_bb - 2 G_ab.
+    """
+    flat = states.reshape(len(states), -1).astype(np.float64)
+    G = flat @ flat.T
+    diag = np.diag(G)
+    squared = np.maximum(diag[:, None] + diag[None, :] - 2 * G, 0.0)
+    norms = np.sqrt(diag)
+    return squared, G / np.outer(norms, norms)
 
 
 def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--data", type=Path, default=Path("/home/claude/data"))
-    ap.add_argument("--chunk", type=int, default=10)
-    ap.add_argument("--realizations", type=int, default=100)
-    args = ap.parse_args()
-    protocol = json.loads((ROOT / "benchmark" / "frozen_protocol.json").read_text())
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--data", type=Path, default=DATA_DIR)
+    parser.add_argument("--out-dir", type=Path, default=RESULTS)
+    parser.add_argument("--chunk", type=int, default=10, help="samples simulated together")
+    parser.add_argument("--realizations", type=int, default=100, help="number of test samples")
+    args = parser.parse_args()
+
+    protocol = load_protocol()
     substeps = protocol["solver"]["substeps_per_output_interval"]
     frames = protocol["observation_indices"]
-    ranges = [tuple(r) for r in protocol["contact_sheet"]["channel_ranges"]]
-    times = [k / 99 for k in frames]
-    configs = config_list()
-    names = [M.config_id(*c) for c in configs]
-    K, N = len(configs), args.realizations
+    ranges = sheet_ranges(protocol)
+    times = observation_times()
+    K, N = len(PROBLEMS), args.realizations
     five_dir = args.data / "trajectories" / "five_frame"
     sheet_dir = args.data / "sheets"
-    five_dir.mkdir(parents=True, exist_ok=True)
-    sheet_dir.mkdir(parents=True, exist_ok=True)
-    out_dir = ROOT / "benchmark" / "results"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    for folder in (five_dir, sheet_dir, args.out_dir):
+        folder.mkdir(parents=True, exist_ok=True)
 
-    five_all = np.zeros((K, N, len(frames), 2, 64, 64), dtype=np.float32)
-    sq5 = np.zeros((N, K, K))
-    sq100 = np.zeros((N, K, K))
-    cos5 = np.zeros((N, K, K))
-    cos100 = np.zeros((N, K, K))
-    err5 = np.zeros((N, K))      # ||stored - reference||^2 (five frames)
-    err100 = np.zeros((N, K))    # same, all frames
-    tstep5 = np.zeros((N, K))    # ||X_m - X_2m||^2 (nonlinear; zero for linear)
-    tstep100 = np.zeros((N, K))
-    traj_sha = {}
-    diagnostics = {name: {"min": np.inf, "max": -np.inf, "finite": True} for name in names}
+    five_all = np.zeros((K, N, len(frames), 2, GRID, GRID), dtype=np.float32)
+    sq5, sq100, cos5, cos100 = (np.zeros((N, K, K)) for _ in range(4))
+    err5, err100 = np.zeros((N, K)), np.zeros((N, K))         # |stored - reference|^2
+    tstep5, tstep100 = np.zeros((N, K)), np.zeros((N, K))     # |dt run - dt/2 run|^2 (nonlinear only)
+    trajectory_sha = {}
+    diagnostics = {name: {"min": np.inf, "max": -np.inf, "finite": True} for name in NAMES}
     out_of_range = np.zeros((K, N), dtype=np.int64)
-    exact_times = np.arange(100) / 99.0
+    exact_times = np.arange(N_STATES) / (N_STATES - 1)
     t_start = time.time()
+
     for start in range(0, N, args.chunk):
         rs = list(range(start, min(N, start + args.chunk)))
-        block = np.zeros((K, len(rs), 100, 2, 64, 64), dtype=np.float32)
-        for k, (pde, fam, bc) in enumerate(configs):
-            U0 = np.stack([M.initial_array(fam, M.draw_parameters(r)[fam]) for r in rs])
+        block = np.zeros((K, len(rs), N_STATES, 2, GRID, GRID), dtype=np.float32)
+        initial = {family: initial_fields(family, rs) for family in FAMILIES}
+        for k, ((pde, family, bc), name) in enumerate(zip(PROBLEMS, NAMES)):
+            U0 = initial[family]
             X = S.simulate(pde, bc, U0, substeps=substeps)
-            X32 = X.astype(np.float32)
+            X32 = X.astype(np.float32)                        # what is stored and encoded
             block[k] = X32
-            if pde in LINEAR:
-                ref = S.exact_linear_reference(pde, bc, U0, exact_times)
+
+            if pde in LINEAR_PDES:
+                reference = S.exact_linear_reference(pde, bc, U0, exact_times)
             else:
-                ref = S.simulate(pde, bc, U0, substeps=2 * substeps)
-                d = X - ref
-                tstep100[rs, k] = np.sum(d**2, axis=(1, 2, 3, 4))
-                tstep5[rs, k] = np.sum(d[:, frames]**2, axis=(1, 2, 3, 4))
-            e = X32.astype(np.float64) - ref
-            err100[rs, k] = np.sum(e**2, axis=(1, 2, 3, 4))
-            err5[rs, k] = np.sum(e[:, frames]**2, axis=(1, 2, 3, 4))
-            diag = diagnostics[names[k]]
+                reference = S.simulate(pde, bc, U0, substeps=2 * substeps)
+                difference = X - reference
+                tstep100[rs, k] = squared_norm(difference)
+                tstep5[rs, k] = squared_norm(difference[:, frames])
+            error = X32.astype(np.float64) - reference
+            err100[rs, k] = squared_norm(error)
+            err5[rs, k] = squared_norm(error[:, frames])
+
+            diag = diagnostics[name]
             diag["min"] = min(diag["min"], float(X32.min()))
             diag["max"] = max(diag["max"], float(X32.max()))
             diag["finite"] = diag["finite"] and bool(np.isfinite(X32).all())
             for i, r in enumerate(rs):
-                traj_sha[f"{names[k]}__r{r:03d}"] = hashlib.sha256(X32[i].tobytes()).hexdigest()
+                trajectory_sha[f"{name}__r{r:03d}"] = hashlib.sha256(X32[i].tobytes()).hexdigest()
                 five_all[k, r] = X32[i, frames]
-                image, bad = R.render_sheet(X32[i, frames], times, ranges)
+                image, bad = render_sheet(X32[i, frames], times, ranges)
                 out_of_range[k, r] = bad
-                image.save(sheet_dir / f"{names[k]}__r{r:03d}.png", optimize=False)
-        # Per-realization Gram matrices in float64 from the stored float32 values.
+                image.save(sheet_dir / f"{name}__r{r:03d}.png", optimize=False)
+
         for i, r in enumerate(rs):
-            full = block[:, i].reshape(K, -1).astype(np.float64)
-            sub = block[:, i][:, frames].reshape(K, -1).astype(np.float64)
-            for target_sq, target_cos, mat in ((sq100, cos100, full), (sq5, cos5, sub)):
-                G = mat @ mat.T
-                dg = np.diag(G)
-                sq = np.maximum(dg[:, None] + dg[None, :] - 2 * G, 0.0)
-                target_sq[r] = sq
-                norm = np.sqrt(dg)
-                target_cos[r] = G / np.outer(norm, norm)
-        # Exactness check of the Gram identity on the first realization of the chunk.
+            sq100[r], cos100[r] = gram_terms(block[:, i])
+            sq5[r], cos5[r] = gram_terms(block[:, i][:, frames])
         if start == 0:
+            # Compare the Gram-matrix distances with direct differences once.
             sub = block[:, 0][:, frames].reshape(K, -1).astype(np.float64)
             direct = ((sub[:, None, :] - sub[None, :, :]) ** 2).sum(-1)
             gram_check = float(np.abs(direct - sq5[0]).max() / max(direct.max(), 1e-300))
         del block
-        print(f"realizations {rs[0]}-{rs[-1]} done, {time.time() - t_start:.0f}s", flush=True)
+        print(f"samples {rs[0]}-{rs[-1]} done, {time.time() - t_start:.0f}s", flush=True)
 
-    for k, name in enumerate(names):
+    for k, name in enumerate(NAMES):
         np.save(five_dir / f"{name}.npy", five_all[k])
-    five_sha = {name: hashlib.sha256((five_dir / f"{name}.npy").read_bytes()).hexdigest() for name in names}
-    np.savez_compressed(out_dir / "reference_terms.npz", config_names=np.array(names),
+    five_sha = {name: hashlib.sha256((five_dir / f"{name}.npy").read_bytes()).hexdigest() for name in NAMES}
+    np.savez_compressed(args.out_dir / "reference_terms.npz", config_names=np.array(NAMES),
                         sq5=sq5, sq100=sq100, cos5=cos5, cos100=cos100, err5=err5, err100=err100,
                         tstep5=tstep5, tstep100=tstep100, out_of_range=out_of_range)
     manifest = {
         "solver": {"name": S.SOLVER_NAME, "version": S.SOLVER_VERSION, "substeps_per_output_interval": substeps,
                    "internal_step": 1 / 99 / substeps, "scheme": "ETDRK4 with exact diffusion in the BC eigenbasis",
                    "numpy": np.__version__},
-        "realizations": [0, N - 1], "configurations": names,
-        "array_shape_full": [K, N, 100, 2, 64, 64], "array_shape_stored": [K, N, len(frames), 2, 64, 64],
+        "realizations": [0, N - 1], "configurations": NAMES,
+        "array_shape_full": [K, N, N_STATES, 2, GRID, GRID],
+        "array_shape_stored": [K, N, len(frames), 2, GRID, GRID],
         "dtype": "float32", "gram_identity_relative_check": gram_check,
-        "five_frame_file_sha256": five_sha, "trajectory_sha256_float32_100_frames": traj_sha,
+        "five_frame_file_sha256": five_sha, "trajectory_sha256_float32_100_frames": trajectory_sha,
         "diagnostics": diagnostics,
         "contact_sheet": {"ranges": ranges, "out_of_range_pixels_total": int(out_of_range.sum()),
                           "sheets_with_out_of_range_pixels": int((out_of_range > 0).sum()),
-                          "size": list(R.sheet_size())},
+                          "size": list(sheet_size())},
         "elapsed_seconds": time.time() - t_start,
     }
-    (out_dir / "simulation_manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
-    print(json.dumps({k: v for k, v in manifest.items() if k not in
-                      ("trajectory_sha256_float32_100_frames", "five_frame_file_sha256", "configurations",
-                       "diagnostics")}, indent=1))
+    (args.out_dir / "simulation_manifest.json").write_text(json.dumps(manifest, indent=1) + "\n")
+    long_keys = ("trajectory_sha256_float32_100_frames", "five_frame_file_sha256", "configurations", "diagnostics")
+    print(json.dumps({key: value for key, value in manifest.items() if key not in long_keys}, indent=1))
 
 
 if __name__ == "__main__":

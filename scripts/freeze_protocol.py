@@ -1,35 +1,33 @@
 #!/usr/bin/env python3
-"""Write benchmark/frozen_protocol.json after the excluded pilot.
+"""Write benchmark/frozen_protocol.json after the pilot.
 
-Everything the test-set analysis depends on is fixed here, before any test
-realization (r = 0..99) is simulated or encoded: coefficients, solver
-settings, rendering, model revisions and input formats, the reduced-scale
-embedding subset, controls, the numerical separation rule, and the analysis.
-SHA-256 hashes of every script are recorded.
+The protocol fixes everything the test analysis depends on before any test
+sample (r = 0..99) is simulated or encoded: coefficients, solver settings,
+image rendering, model versions and input formats, the encoded subset, the
+controls, the error-margin rule and the analysis. It also stores the SHA-256
+of every script.
+
+The study's protocol already exists, so this script refuses to overwrite it
+unless --force is given. Use --output to write a new protocol elsewhere.
 """
 from __future__ import annotations
 
+import argparse
 import datetime as dt
 import hashlib
 import json
-import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-import controls as C  # noqa: E402
-import embed_models as E  # noqa: E402
-import render as R  # noqa: E402
-import simulator as S  # noqa: E402
-
-ROOT = Path(__file__).resolve().parents[1]
+import controls as C
+import render as R
+import simulator as S
+from common import BENCHMARK, CHECKPOINTS, FRAMES, PROTOCOL_FILE, REPO
 
 
-def main() -> None:
-    pilot = json.loads((ROOT / "benchmark" / "pilot_report.json").read_text())
-    if not pilot["passed"]:
-        raise SystemExit("pilot failed; coefficients must be revised before freezing")
-    scripts = sorted((ROOT / "scripts").glob("*.py"))
-    protocol = {
+def build_protocol(pilot: dict) -> dict:
+    import embed_models as E          # needs torch, so it is imported only when a protocol is built
+    scripts = sorted((REPO / "scripts").glob("*.py"))
+    return {
         "frozen_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "status": "frozen before any test realization was simulated or encoded",
         "pilot_report": "benchmark/pilot_report.json",
@@ -39,18 +37,18 @@ def main() -> None:
                              "the BC eigenbasis (rFFT / DST-II / DCT-II); advection, exchange and reactions explicit",
                    "substeps_per_output_interval": pilot["substeps"], "internal_step": 1 / 99 / pilot["substeps"],
                    "float": "float64 internally, float32 stored"},
-        "observation_indices": [0, 25, 50, 74, 99],
+        "observation_indices": FRAMES,
         "test_realizations": [0, 99], "pilot_realizations": pilot["pilot_realizations"],
         "contact_sheet": {"layout": "2 channel rows (u, v) x 5 time columns", "panel_pixels": 64 * R.PANEL_SCALE,
                           "upsampling": "nearest-neighbour x2", "size_wh": list(R.sheet_size()),
                           "colormap": R.COLORMAP, "channel_ranges": pilot["P6_contact_sheet_range"],
                           "labels": "t=0.00, t=0.25, t=0.51, t=0.75, t=1.00 and u, v only",
                           "orientation": "x to the right, y upward", "clipping": "display only; arrays unmodified"},
-        "models": {k: {"checkpoint": v[0], "revision": v[1]} for k, v in E.CHECKPOINTS.items()},
+        "models": {k: {"checkpoint": repo, "revision": revision} for k, (repo, revision) in CHECKPOINTS.items()},
         "model_inputs": {
             "embeddinggemma2": {"text_prefix": E.GEMMA_PREFIX, "image_prefix": None,
                                 "combined": E.GEMMA_PREFIX + "{deck}\\n<|image|>", "dtype": "bfloat16",
-                                "pooling": "checkpoint (mean) + normalize", "image_tokens": 280},
+                                "pooling": "checkpoint (mean) + normalize", "image_tokens": E.GEMMA_IMAGE_TOKENS},
             "qwen3vl2b": {"instruction": E.QWEN3_INSTRUCTION, "order": "image then text", "dtype": "bfloat16",
                           "min_pixels": E.Qwen3VLBackend.min_pixels, "max_pixels": E.Qwen3VLBackend.max_pixels,
                           "pooling": "last token"},
@@ -90,7 +88,22 @@ def main() -> None:
             "full_matrix": "54x54 matrix as secondary analysis"},
         "script_sha256": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in scripts},
     }
-    (ROOT / "benchmark" / "frozen_protocol.json").write_text(json.dumps(protocol, indent=2) + "\n")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--pilot", type=Path, default=BENCHMARK / "pilot_report.json")
+    parser.add_argument("--output", type=Path, default=PROTOCOL_FILE)
+    parser.add_argument("--force", action="store_true", help="overwrite an existing protocol")
+    args = parser.parse_args()
+    if args.output.exists() and not args.force:
+        raise SystemExit(f"{args.output} already exists; it records the study as run. "
+                         "Use --output for a new file or --force to replace it.")
+    pilot = json.loads(args.pilot.read_text())
+    if not pilot["passed"]:
+        raise SystemExit("the pilot failed; revise the coefficients before freezing")
+    protocol = build_protocol(pilot)
+    args.output.write_text(json.dumps(protocol, indent=2) + "\n")
     print(json.dumps({k: protocol[k] for k in ("frozen_at", "solver", "contact_sheet")}, indent=2))
 
 

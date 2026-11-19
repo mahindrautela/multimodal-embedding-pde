@@ -1,38 +1,51 @@
 #!/usr/bin/env python3
-"""Create the six-PDE input decks and shared initial-condition parameter bank.
+"""Create the problem descriptions ("decks") and the shared initial-condition bank.
 
-Default: 54 distribution-level JSON decks, three resolved JSON/text examples,
-and a 3 x 100 parameter bank. --all-realizations writes all 5,400 resolved
-JSON/text pairs. No trajectory simulation or embedding inference is performed.
+Outputs, under --output (default: benchmark/):
+  configurations/<problem>.json   54 decks that describe each IC *distribution*
+  ic_parameter_bank.json          the random IC parameters of samples 0..99
+  spec.json                       a short summary of the benchmark design
+  deck_checks.json                results of the self-checks below
+  resolved_decks.zip              (with --all-realizations) all 5,400 decks with
+                                  the actual IC formula of each sample, as
+                                  realizations/<problem>__r<rrr>.json and .txt
 
-Every realization uses PCG64(SeedSequence([20261118, realization])). The
-resulting (2, 20) uniform array contains one independent row per channel.
-The same row is mapped into all three IC families:
-  0 amplitude; 1,2,3 first Gaussian x,y,sigma;
+How the random initial conditions are drawn
+-------------------------------------------
+Sample r uses NumPy's PCG64 generator seeded with SeedSequence([20261118, r]).
+It draws one (2, 20) array of uniform numbers: one row per field (u, v).
+The same row is turned into the parameters of all three IC families:
+  0 amplitude; 1,2,3 first Gaussian x, y, sigma;
   4,5 integer Fourier frequencies; 6,7 phases; 8 first mixture weight;
-  9,10,11 second Gaussian x,y,sigma; 12 second weight;
-  13,14,15 third Gaussian x,y,sigma; 16 third weight; 17:20 reserved.
-All floating generator parameters are rounded to eight decimals BEFORE use.
+  9,10,11 second Gaussian x, y, sigma; 12 second weight;
+  13,14,15 third Gaussian x, y, sigma; 16 third weight; 17-19 unused.
+Every floating parameter is rounded to eight decimals BEFORE it is used, so the
+numbers written in a deck define the initial field exactly.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import zipfile
 from pathlib import Path
 from typing import Any
 
 import numpy as np
 
 BASE_SEED = 20261118
-N_TRAJECTORIES = 100
+N_TRAJECTORIES = 100            # test samples per problem
 GRID_N = 64
-N_STATES = 100
+N_STATES = 100                  # saved states, t_n = n / 99
 T_FINAL = 1.0
 FRAME_INDICES = [0, 25, 50, 74, 99]
 CHANNELS = ["u", "v"]
 FAMILIES = ["single_gaussian", "low_frequency", "patch_mixture"]
 BOUNDARIES = ["periodic", "dirichlet_zero", "neumann_zero"]
+
+# ---------------------------------------------------------------------------
+# LaTeX pieces of a deck
+# ---------------------------------------------------------------------------
 ETA_LATEX = (
     r"\eta(s)=\begin{cases}\exp\!\left(4-\frac{1}{s(1-s)}\right),"
     r"&0<s<1,\\0,&s\in\{0,1\}.\end{cases}"
@@ -102,18 +115,26 @@ def rounded(value: float) -> float:
 
 
 def decimal(value: float) -> str:
-    """The text deck records every resolved floating parameter explicitly."""
+    """Every floating parameter is written with eight decimals."""
     return f"{value:.8f}"
 
 
+def config_id(pde: str, family: str, bc: str) -> str:
+    """Name of a problem, e.g. 'gray_scott__low_frequency__periodic'."""
+    return f"{pde}__{family}__{bc}"
+
+
+# ---------------------------------------------------------------------------
+# Random IC parameters and the initial arrays
+# ---------------------------------------------------------------------------
 def draw_parameters(realization: int) -> dict[str, list[dict[str, Any]]]:
-    """Return all three families from one fixed latent draw."""
+    """IC parameters of one sample for all three families (one dict per field)."""
     if not isinstance(realization, (int, np.integer)) or realization < 0:
-        raise ValueError("realization must be a nonnegative integer; 0..99 are test draws, >=100 are pilot draws")
+        raise ValueError("sample index must be a nonnegative integer; 0..99 are test draws, >=100 are pilot draws")
     rng = np.random.Generator(np.random.PCG64(np.random.SeedSequence([BASE_SEED, realization])))
     latent = rng.uniform(size=(2, 20))
     result: dict[str, list[dict[str, Any]]] = {name: [] for name in FAMILIES}
-    for row in latent:
+    for row in latent:                                   # one row per field
         amplitude = rounded(0.2 + 0.6 * row[0])
 
         def gaussian(offset: int) -> dict[str, float]:
@@ -139,6 +160,7 @@ def draw_parameters(realization: int) -> dict[str, list[dict[str, Any]]]:
 
 
 def eta(s: np.ndarray) -> np.ndarray:
+    """Smooth window: exp(4 - 1/(s(1-s))) inside (0, 1), exactly zero at the ends."""
     s = np.asarray(s, dtype=np.float64)
     result = np.zeros_like(s)
     inside = (s > 0) & (s < 1)
@@ -147,6 +169,7 @@ def eta(s: np.ndarray) -> np.ndarray:
 
 
 def _evaluate(family: str, parameters: list[dict[str, Any]], x: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """Evaluate both initial fields at the points (x, y)."""
     if family not in FAMILIES or len(parameters) != 2:
         raise ValueError("Provide a supported family and two channel parameter dictionaries")
     window = eta(x) * eta(y)
@@ -168,7 +191,7 @@ def _evaluate(family: str, parameters: list[dict[str, Any]], x: np.ndarray, y: n
 
 
 def initial_array(family: str, parameters: list[dict[str, Any]], n: int = GRID_N) -> np.ndarray:
-    """Evaluate a resolved IC on the common cell-centered grid; returns float64 [2,n,n]."""
+    """Initial fields on the n x n cell-centered grid; float64 [2, n, n], axes (field, x, y)."""
     if not isinstance(n, int) or n < 1:
         raise ValueError("n must be a positive integer")
     coordinates = (np.arange(n, dtype=np.float64) + 0.5) / n
@@ -176,6 +199,9 @@ def initial_array(family: str, parameters: list[dict[str, Any]], n: int = GRID_N
     return _evaluate(family, parameters, x, y)
 
 
+# ---------------------------------------------------------------------------
+# Deck text
+# ---------------------------------------------------------------------------
 def gaussian_latex(g: dict[str, Any]) -> str:
     return (
         r"\exp\!\left[-\frac{(x-" + decimal(g["center_x"]) + r")^2+(y-"
@@ -184,6 +210,7 @@ def gaussian_latex(g: dict[str, Any]) -> str:
 
 
 def resolved_ic_latex(family: str, parameters: list[dict[str, Any]]) -> str:
+    """The explicit initial fields of one sample."""
     expressions = [ETA_LATEX]
     for channel, p in zip(CHANNELS, parameters):
         amplitude = decimal(p["amplitude"])
@@ -203,6 +230,7 @@ def resolved_ic_latex(family: str, parameters: list[dict[str, Any]]) -> str:
 
 
 def distribution_ic_latex(family: str) -> str:
+    """The IC distribution of a family (used in the 54 configuration decks)."""
     common = (
         ETA_LATEX + "\n" + r"q(0,x,y)=\alpha_q\eta(x)\eta(y)g_q(x,y),\quad q\in\{u,v\},\quad "
         r"\alpha_q\sim\mathcal U[0.2,0.8]."
@@ -225,7 +253,8 @@ def distribution_ic_latex(family: str) -> str:
             r"w_{q\ell}\sim\mathcal U[0.2,1],\quad\mu_{x,q\ell},\mu_{y,q\ell}\sim\mathcal U[0.25,0.75],\quad "
             r"\sigma_{q\ell}\sim\mathcal U[0.08,0.18]."
         )
-    return common + "\n" + profile + "\n" + r"\text{Parameters are independently sampled between channels and rounded to eight decimal places.}"
+    return (common + "\n" + profile + "\n"
+            + r"\text{Parameters are independently sampled between channels and rounded to eight decimal places.}")
 
 
 def coefficient_latex(parameters: dict[str, float]) -> str:
@@ -234,26 +263,24 @@ def coefficient_latex(parameters: dict[str, float]) -> str:
 
 
 def input_text(latex: dict[str, str]) -> str:
+    """The exact text given to a model: six headed sections."""
     headings = [("Equation", "pde"), ("Parameters", "parameters"), ("Initial condition", "ic"),
                 ("Boundary", "bc"), ("Domain", "domain"), ("Time", "time")]
     return "\n\n".join(heading + ":\n" + latex[key] for heading, key in headings) + "\n"
 
 
-def config_id(pde: str, family: str, bc: str) -> str:
-    return f"{pde}__{family}__{bc}"
-
-
 def make_deck(pde: str, family: str, bc: str, parameters: list[dict[str, Any]] | None = None,
               realization: int | None = None) -> dict[str, Any]:
+    """One deck as a JSON-ready dict. Without parameters it describes the IC distribution."""
     resolved = parameters is not None
     if resolved != (realization is not None):
-        raise ValueError("Resolved parameters and realization index must be supplied together")
+        raise ValueError("Resolved parameters and sample index must be supplied together")
     pde_spec = PDE_SPECS[pde]
     latex = {"pde": pde_spec["latex"], "parameters": coefficient_latex(pde_spec["parameters"]),
              "ic": resolved_ic_latex(family, parameters) if resolved else distribution_ic_latex(family),
              "bc": BC_LATEX[bc], "domain": DOMAIN_LATEX, "time": TIME_LATEX}
-    deck: dict[str, Any] = {
-        "schema_version": "1.0",
+    return {
+        "schema_version": "1.1",
         "configuration_id": config_id(pde, family, bc),
         "pde_class": pde,
         "ic_family": family,
@@ -269,7 +296,7 @@ def make_deck(pde: str, family: str, bc: str, parameters: list[dict[str, Any]] |
                  "saved_times": [float(n / 99) for n in range(N_STATES)],
                  "observation_indices": FRAME_INDICES,
                  "observation_times": [float(n / 99) for n in FRAME_INDICES],
-                 "internal_solver_steps": "not specified; output intervals are not solver steps"},
+                 "solver_steps": "see benchmark/frozen_protocol.json; output intervals are not solver steps"},
         "initial_condition": {"parameter_precision_decimal_places": 8,
                               "parameter_bank": "../ic_parameter_bank.json",
                               "generator_parameters": parameters if resolved else None,
@@ -278,149 +305,169 @@ def make_deck(pde: str, family: str, bc: str, parameters: list[dict[str, Any]] |
                        "rng": "PCG64(SeedSequence([20261118, realization_index]))",
                        "shared_initial_arrays": "identical within each IC family across all PDEs and BCs",
                        "cross_family_coupling": "same explicit (2,20) latent draw; documented parameter mapping"},
-        "solver_status": "not_run",
-        "embedding_status": "not_run",
         "model_input_text": input_text(latex),
     }
-    return deck
+
+
+# ---------------------------------------------------------------------------
+# Writing files
+# ---------------------------------------------------------------------------
+def to_json(value: Any) -> str:
+    return json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n"
 
 
 def write_json(path: Path, value: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
+    path.write_text(to_json(value), encoding="utf-8")
+
+
+def check_initial_conditions() -> dict[str, Any]:
+    """Self-checks of all 300 test ICs: bounds, zero boundary values, and exact replay."""
+    bounds = {family: {"minimum": float("inf"), "maximum": -float("inf"), "example_sha256_float64": None}
+              for family in FAMILIES}
+    edge = np.linspace(0, 1, 17)
+    boundary_points = [(np.zeros_like(edge), edge), (np.ones_like(edge), edge),
+                       (edge, np.zeros_like(edge)), (edge, np.ones_like(edge))]
+    for r in range(N_TRAJECTORIES):
+        draws = draw_parameters(r)
+        if draws != draw_parameters(r):
+            raise AssertionError("parameter draw is not reproducible")
+        for family in FAMILIES:
+            array = initial_array(family, draws[family])
+            if array.shape != (2, GRID_N, GRID_N) or not np.isfinite(array).all():
+                raise AssertionError("invalid initial array")
+            if array.min() < 0 or array.max() > 0.8 + 1e-12:
+                raise AssertionError("initial values outside [0, 0.8]")
+            if not np.array_equal(array, initial_array(family, draw_parameters(r)[family])):
+                raise AssertionError("initial array is not reproducible")
+            for x, y in boundary_points:
+                if np.any(_evaluate(family, draws[family], x, y) != 0):
+                    raise AssertionError("initial field is not zero on the boundary")
+            bounds[family]["minimum"] = min(bounds[family]["minimum"], float(array.min()))
+            bounds[family]["maximum"] = max(bounds[family]["maximum"], float(array.max()))
+            if r == 0:
+                bounds[family]["example_sha256_float64"] = hashlib.sha256(array.astype("<f8").tobytes()).hexdigest()
+    return bounds
+
+
+def check_no_leak(deck: dict[str, Any]) -> None:
+    """The model text must not name the PDE, IC family, BC or problem."""
+    text = deck["model_input_text"]
+    if any(label in text for label in list(PDE_SPECS) + FAMILIES + BOUNDARIES):
+        raise AssertionError("provenance label leaked into model input")
+    if deck["configuration_id"] in text:
+        raise AssertionError("problem name leaked into model input")
+
+
+def write_resolved_zip(path: Path, bank: dict[str, list]) -> int:
+    """Write all 5,400 resolved decks (JSON + text) into one zip with fixed timestamps."""
+    count = 0
+    with zipfile.ZipFile(path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for pde in PDE_SPECS:
+            for family in FAMILIES:
+                for bc in BOUNDARIES:
+                    for r in range(N_TRAJECTORIES):
+                        deck = make_deck(pde, family, bc, bank[family][r]["parameters"], r)
+                        check_no_leak(deck)
+                        base = f"realizations/{config_id(pde, family, bc)}__r{r:03d}"
+                        for suffix, payload in ((".json", to_json(deck)), (".txt", deck["model_input_text"])):
+                            info = zipfile.ZipInfo(base + suffix, date_time=(2026, 11, 18, 0, 0, 0))
+                            info.compress_type = zipfile.ZIP_DEFLATED
+                            info.external_attr = 0o644 << 16      # regular file, rw-r--r--
+                            archive.writestr(info, payload.encode("utf-8"))
+                        count += 1
+    return count
 
 
 def build(output: Path, all_realizations: bool) -> dict[str, Any]:
     output.mkdir(parents=True, exist_ok=True)
+    bounds = check_initial_conditions()
+
+    # Parameter bank of the 100 test samples.
     bank = {family: [] for family in FAMILIES}
-    bounds = {family: {"minimum": float("inf"), "maximum": -float("inf"), "example_sha256_float64": None}
-              for family in FAMILIES}
-    boundary_zero = True
-    replay_equal = True
     for r in range(N_TRAJECTORIES):
         draws = draw_parameters(r)
-        replay_equal = replay_equal and draws == draw_parameters(r)
         for family in FAMILIES:
-            parameters = draws[family]
             bank[family].append({"realization_index": r, "seed_entropy": [BASE_SEED, r],
-                                 "channel_order": CHANNELS, "parameters": parameters})
-            array = initial_array(family, parameters)
-            if array.shape != (2, 64, 64) or not np.isfinite(array).all():
-                raise AssertionError("Invalid initial array")
-            if array.min() < 0 or array.max() > 0.8 + 1e-12:
-                raise AssertionError("Initial-condition bound failed")
-            replay_equal = replay_equal and np.array_equal(array, initial_array(family, draw_parameters(r)[family]))
-            bounds[family]["minimum"] = min(bounds[family]["minimum"], float(array.min()))
-            bounds[family]["maximum"] = max(bounds[family]["maximum"], float(array.max()))
-            edge = np.linspace(0, 1, 17)
-            boundary_zero = boundary_zero and bool(np.all(_evaluate(family, parameters, np.zeros_like(edge), edge) == 0))
-            boundary_zero = boundary_zero and bool(np.all(_evaluate(family, parameters, np.ones_like(edge), edge) == 0))
-            boundary_zero = boundary_zero and bool(np.all(_evaluate(family, parameters, edge, np.zeros_like(edge)) == 0))
-            boundary_zero = boundary_zero and bool(np.all(_evaluate(family, parameters, edge, np.ones_like(edge)) == 0))
-            if r == 0:
-                bounds[family]["example_sha256_float64"] = hashlib.sha256(array.astype("<f8").tobytes()).hexdigest()
-    if not boundary_zero or not replay_equal:
-        raise AssertionError("Boundary or reproducibility check failed")
+                                 "channel_order": CHANNELS, "parameters": draws[family]})
+    write_json(output / "ic_parameter_bank.json", {
+        "schema_version": "1.0", "base_seed": BASE_SEED,
+        "rng": "PCG64", "seed_sequence": "[base_seed, realization_index]",
+        "latent_shape": [2, 20], "floating_parameter_decimal_places": 8,
+        "latent_mapping": {
+            "0": "shared amplitude:0.2+0.6*z", "1,2,3": "first Gaussian center_x,center_y,sigma",
+            "4,5": "kx,ky:1+floor(3*z)", "6,7": "phase_x,phase_y:2*pi*z",
+            "8": "first mixture weight:0.2+0.8*z", "9,10,11": "second Gaussian center_x,center_y,sigma",
+            "12": "second mixture weight", "13,14,15": "third Gaussian center_x,center_y,sigma",
+            "16": "third mixture weight", "17,18,19": "reserved"},
+        "families": bank})
 
-    bank_document = {"schema_version": "1.0", "base_seed": BASE_SEED,
-                     "rng": "PCG64", "seed_sequence": "[base_seed, realization_index]",
-                     "latent_shape": [2, 20], "floating_parameter_decimal_places": 8,
-                     "latent_mapping": {
-                         "0": "shared amplitude:0.2+0.6*z", "1,2,3": "first Gaussian center_x,center_y,sigma",
-                         "4,5": "kx,ky:1+floor(3*z)", "6,7": "phase_x,phase_y:2*pi*z",
-                         "8": "first mixture weight:0.2+0.8*z", "9,10,11": "second Gaussian center_x,center_y,sigma",
-                         "12": "second mixture weight", "13,14,15": "third Gaussian center_x,center_y,sigma",
-                         "16": "third mixture weight", "17,18,19": "reserved"},
-                     "families": bank}
-    write_json(output / "ic_parameter_bank.json", bank_document)
-
+    # The 54 distribution-level decks.
     configuration_files = []
-    realization_files = []
     for pde in PDE_SPECS:
         for family in FAMILIES:
             for bc in BOUNDARIES:
-                name = config_id(pde, family, bc)
-                config_path = output / "configurations" / f"{name}.json"
-                write_json(config_path, make_deck(pde, family, bc))
-                configuration_files.append(str(config_path.relative_to(output)))
-                indices = range(N_TRAJECTORIES) if all_realizations else ([0] if pde == "diffusion" and bc == "periodic" else [])
-                for r in indices:
-                    resolved = make_deck(pde, family, bc, bank[family][r]["parameters"], r)
-                    base = output / "realizations" / f"{name}__r{r:03d}"
-                    write_json(base.with_suffix(".json"), resolved)
-                    base.with_suffix(".txt").write_text(resolved["model_input_text"], encoding="utf-8")
-                    realization_files.append(str(base.with_suffix(".json").relative_to(output)))
+                path = output / "configurations" / f"{config_id(pde, family, bc)}.json"
+                deck = make_deck(pde, family, bc)
+                check_no_leak(deck)
+                write_json(path, deck)
+                configuration_files.append(str(path.relative_to(output)))
 
-    shape = [54, 100, 100, 2, 64, 64]
-    total_bytes = int(np.prod(shape)) * 4
-    specification = {
-        "schema_version": "1.0", "status": "input decks only; simulations and embedding inference not run",
+    resolved = write_resolved_zip(output / "resolved_decks.zip", bank) if all_realizations else 0
+
+    shape = [54, N_TRAJECTORIES, N_STATES, 2, GRID_N, GRID_N]
+    write_json(output / "spec.json", {
+        "schema_version": "1.1",
         "pde_classes": list(PDE_SPECS), "ic_families": FAMILIES, "boundary_conditions": BOUNDARIES,
-        "number_of_configurations": 54, "trajectories_per_configuration": 100,
-        "planned_total_trajectories": 5400, "planned_array_shape": shape,
-        "planned_array_axes": ["configuration", "trajectory", "saved_state", "channel", "x", "y"],
-        "planned_float32_bytes": total_bytes, "planned_float32_GiB": total_bytes / 2**30,
+        "number_of_configurations": 54, "trajectories_per_configuration": N_TRAJECTORIES,
+        "total_trajectories": 54 * N_TRAJECTORIES, "full_array_shape": shape,
+        "full_array_axes": ["configuration", "trajectory", "saved_state", "channel", "x", "y"],
+        "full_array_float32_bytes": int(np.prod(shape)) * 4,
         "domain": [[0.0, 1.0], [0.0, 1.0]], "grid_type": "cell_centered", "channel_order": CHANNELS,
         "final_time": T_FINAL, "saved_times": [float(n / 99) for n in range(N_STATES)],
         "observation_indices": FRAME_INDICES,
-        "test_realization_indices": {"first": 0, "last": 99},
+        "test_realization_indices": {"first": 0, "last": N_TRAJECTORIES - 1},
         "pilot_realization_indices": {"first": 100, "last": None},
-        "models": [
-            {"checkpoint": "google/embeddinggemma-2", "embedding_dimension": 768, "revision": None},
-            {"checkpoint": "Qwen/Qwen3-VL-Embedding-2B", "embedding_dimension": 2048, "revision": None},
-            {"checkpoint": "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct", "embedding_dimension": 1536, "revision": None},
-        ],
         "input_modes": ["resolved_text", "five_frame_contact_sheet", "native_text_plus_image"],
         "reference": {"primary": "uniform RMS over matched trajectories, five observed frames, two fields and all pixels",
                       "secondary": "uniform RMS over all 100 saved frames",
-                      "physical_cosine": "optional separate amplitude-normalized analysis"},
+                      "physical_cosine": "separate amplitude-normalized analysis"},
         "embedding_score": "mean normalized dot product of matched realization pairs",
-        "primary_analysis": "within each IC family: 18 configurations; Spearman versus negative RMS and ordered-triplet accuracy",
+        "primary_analysis": "within each IC family: 18 configurations; Spearman versus negative RMS and "
+                            "ordered-triplet accuracy",
         "uncertainty": "joint matched-realization bootstrap; conditional on the selected PDE/BC configurations",
         "ic_parameter_bank": "ic_parameter_bank.json",
-        "input_deck_generation": "all_realizations" if all_realizations else "three_resolved_examples",
-        "configuration_files": configuration_files, "resolved_json_files_written_this_run": realization_files,
+        "solver_models_and_analysis": "see frozen_protocol.json and results/",
+        "configuration_files": configuration_files,
         "model_input_policy": "Use model_input_text or the resolved .txt, never provenance labels or configuration IDs.",
         "initial_condition_policy": "Round generator parameters to eight decimals before evaluating; common arrays across PDEs/BCs.",
         "neumann_note": "Zero normal gradient; not automatically zero total advective flux.",
-    }
-    write_json(output / "spec.json", specification)
-    resolved_count = 5400 if all_realizations else 3
-    assert len(configuration_files) == 54 and len(realization_files) == resolved_count
-    for name in realization_files:
-        deck = json.loads((output / name).read_text(encoding="utf-8"))
-        text = deck["model_input_text"]
-        if any(label in text for label in list(PDE_SPECS) + FAMILIES + BOUNDARIES):
-            raise AssertionError("Provenance label leaked into model input")
-        if deck["configuration_id"] in text:
-            raise AssertionError("Configuration ID leaked into model input")
-        if deck["initial_condition"]["generator_parameters"] is None:
-            raise AssertionError("Resolved example has no numeric IC parameters")
+    })
 
     checks = {
         "status": "passed", "numpy_version": np.__version__, "base_seed": BASE_SEED,
         "configuration_json_decks": len(configuration_files),
-        "resolved_json_decks_written_this_run": len(realization_files),
-        "resolved_text_decks_written_this_run": len(realization_files),
+        "resolved_decks_written_this_run": resolved,
         "ic_parameter_records": {family: len(bank[family]) for family in FAMILIES},
-        "initial_arrays_evaluated_for_checks": 300,
-        "initial_array_shape": [2, 64, 64], "initial_array_dtype": "float64",
+        "initial_arrays_checked": N_TRAJECTORIES * len(FAMILIES),
+        "initial_array_shape": [2, GRID_N, GRID_N], "initial_array_dtype": "float64",
         "all_arrays_finite_and_between_0_and_0_8": True,
-        "exact_zero_sampled_boundary_values": boundary_zero,
-        "parameter_and_array_replay_identical": replay_equal,
-        "resolved_model_inputs_exclude_provenance_labels": True,
+        "exact_zero_sampled_boundary_values": True,
+        "parameter_and_array_replay_identical": True,
+        "model_inputs_exclude_provenance_labels": True,
         "ic_bounds": bounds,
-        "simulations_run": False, "embedding_inference_run": False,
-        "note": "Boundary derivatives vanish by construction; sampled boundary values are a numerical check. Hashes describe this NumPy/platform execution. Existing unrelated files are not deleted.",
+        "note": "Boundary derivatives vanish by construction; sampled boundary values are a numerical check. "
+                "Hashes describe this NumPy/platform execution.",
     }
     write_json(output / "deck_checks.json", checks)
     return checks
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parents[1] / "benchmark")
-    parser.add_argument("--all-realizations", action="store_true", help="Write 5,400 resolved JSON/text pairs instead of three examples")
+    parser.add_argument("--all-realizations", action="store_true",
+                        help="also write all 5,400 resolved decks to resolved_decks.zip")
     args = parser.parse_args()
     print(json.dumps(build(args.output.resolve(), args.all_realizations), indent=2))
 
