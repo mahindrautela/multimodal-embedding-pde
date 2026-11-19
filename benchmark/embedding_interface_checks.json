@@ -1,0 +1,42 @@
+{
+  "purpose": "checks of the frozen embedding interfaces, run on a pilot contact sheet (pilot realization 100, Gray-Scott, zero Dirichlet) and test-bank text decks before any test embeddings were computed; no similarity results were inspected",
+  "gme2b_vs_official_gme_inference_py": {
+    "reference_environment": "transformers 4.51.3, torch 2.6.0+cpu, official GmeQwen2VL class, bfloat16 on CPU",
+    "this_environment": "transformers 5.23.0, torch 2.15.0+cpu, scripts/embed_models.py as used for all test inputs (slow PIL image processor), bfloat16 on CPU",
+    "input_ids_identical": true,
+    "image_grid_thw_identical": true,
+    "pixel_values_mean_abs_difference": 0.000124,
+    "embedding_cosine_text_two_decks": [
+      0.99955,
+      0.99881
+    ],
+    "embedding_cosine_image": 0.99919,
+    "embedding_cosine_text_plus_image": 0.99733,
+    "note": "Cosines measured with the final configuration. Remaining differences are bfloat16 kernel differences between library versions and uint8 rounding in image resizing (pixel values differ by 1.2e-4 on average); the reference uses sequential position ids, reproduced explicitly."
+  },
+  "qwen3vl2b_vs_sentence_transformers_card_path": {
+    "embedding_cosine_text": 0.9999988,
+    "embedding_cosine_image": 0.99881,
+    "embedding_cosine_text_plus_image_same_order": 0.99966,
+    "embedding_cosine_text_plus_image_if_text_first": 0.90493,
+    "note": "The official qwen3_vl_embedding.py places the image before the text; a text-first dict changes the joint embedding substantially, so the official order is used."
+  },
+  "embeddinggemma2_bfloat16_vs_float32_before_renormalization": {
+    "inner_product_text_image_both": [
+      0.99885,
+      1.00065,
+      1.00166
+    ],
+    "speed_seconds_bf16_text_image_both": [
+      0.61,
+      2.01,
+      2.76
+    ],
+    "speed_seconds_fp32_text_image_both": [
+      1.56,
+      5.55,
+      7.22
+    ],
+    "note": "Inner products above 1 show that bfloat16 outputs are unit-norm only to about 1e-3; all embeddings are therefore re-normalized in float32."
+  }
+}

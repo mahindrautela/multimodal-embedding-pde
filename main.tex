@@ -1,0 +1,59 @@
+\documentclass{article}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{booktabs,array}
+\usepackage{xcolor}
+\usepackage{hyperref,xurl}
+\usepackage{placeins}
+% The supplied ICML style is unchanged. This is a working preprint.
+\usepackage[preprint]{icml2027}
+\usepackage{amsmath,amssymb,mathtools,amsthm}
+\usepackage[capitalize,noabbrev]{cleveref}
+\usepackage{enumitem}
+\usepackage{listings}
+\newtheorem{proposition}{Proposition}
+\newcommand{\U}{\mathbf U}
+\newcommand{\D}{\mathbf D}
+\newcommand{\pending}{\textit{Pending}}
+\input{sections/generated/macros}
+\renewcommand{\today}{November 19, 2026}
+\icmltitlerunning{Do Multimodal Embeddings Capture PDE Behavior?}
+\hypersetup{pdftitle={Do Multimodal Embeddings Capture PDE Behavior?},pdfauthor={Anonymous Authors},pdfsubject={Working research manuscript}}
+\begin{document}
+\twocolumn[
+\icmltitle{Do Multimodal Embeddings Capture PDE Behavior?}
+\begin{icmlauthorlist}
+\icmlauthor{Anonymous Authors}{anon}
+\end{icmlauthorlist}
+\icmlaffiliation{anon}{Affiliations omitted in this working draft}
+\icmlcorrespondingauthor{Anonymous Authors}{contact omitted in this draft}
+\icmlkeywords{PDEs, multimodal embeddings, representation evaluation, scientific machine learning}
+\vskip 0.3in
+]
+\printAffiliationsAndNotice{}
+\begin{abstract}
+Can a pretrained embedding model tell when two partial differential equation (PDE) problems lead to similar behavior? We test this on 54 two-dimensional problems built from six equations, three kinds of initial condition, and three boundary conditions, each simulated 100 times with one validated solver. The similarity of two problems is the root-mean-square difference between their solutions when both start from the same initial data, and numerical error bounds show that every ranking we use is reliable. We then give three multimodal embedding models, used without fine-tuning, a text description of each problem, an image of five snapshots of its solution, or both. We ask whether their similarity scores rank pairs of problems in the same order. On ten samples per problem, chosen in advance, image embeddings reach Spearman correlations of \spImageMin--\spImageMax{} with the reference, while simply comparing pixels reaches \spPix{}. Text embeddings reach only \spTextMin--\spTextMax{}, close to a character $n$-gram baseline (\spTfidf{}). For two of the models, rewriting a description in equivalent notation moves its embedding further than replacing the problem with any of the other 53. Text and image together give \spBothMin--\spBothMax{}, close to text alone. These models recognize solutions that look alike much better than equations that behave alike.
+\end{abstract}
+\noindent\textbf{Draft status.} All simulations, reference distances, and simple baselines are complete. Because only CPU hardware was available, the embedding models were run on 10 of the 100 samples per problem, chosen in advance. The full run is still to be done.
+\input{sections/introduction}
+\input{sections/benchmark}
+\input{sections/comparison}
+\input{sections/experiment}
+\input{sections/results}
+\input{sections/discussion}
+\FloatBarrier
+\label{main-end}
+\section*{Impact Statement}
+This work tests whether embedding similarity reflects one specific, measurable kind of PDE behavior. Evidence of this kind can guide the use of embeddings for scientific search and organization. A high similarity score does not mean that two physical systems are interchangeable, or that either simulation is accurate. We release the problem definitions, numerical checks, and all results so that these limits stay visible.
+\section*{AI Disclosure Statement}
+ChatGPT helped with literature checks, drafting, derivations, and code for the earlier design draft. Claude (Anthropic) implemented the solver, the validation, the pilot, the main simulations, the embedding runs, and the analysis reported here, and revised the text. Every reported number comes from code that was actually run, and its outputs are included in the release; no result was estimated or filled in by a language model. The numerical checks are consistency checks, not formal proofs. The human authors must review the code, the paper, and the evidence before submission.
+\bibliography{references}
+\bibliographystyle{icml2027}
+\clearpage
+\appendix
+\onecolumn
+\input{sections/math_details}
+\input{sections/validation}
+\input{sections/reproducibility}
+\input{sections/extra_results}
+\end{document}

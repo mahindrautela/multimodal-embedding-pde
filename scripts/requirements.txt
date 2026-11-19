@@ -1,0 +1,6 @@
+# Decks, simulation, analysis, tables and figures (versions used for the reported run)
+numpy>=2.0        # 2.5.3
+scipy>=1.13       # 1.18.1
+matplotlib>=3.8   # 3.11.2
+pillow>=10        # 12.3.0
+scikit-learn>=1.4 # 1.9.1

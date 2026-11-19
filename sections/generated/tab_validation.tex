@@ -1,0 +1,18 @@
+\begin{table}[h]
+\centering
+\caption{Solver checks on pilot samples. Time error: largest absolute error with four steps per output interval, measured against the exact grid solution (linear equations) or against a run with four times as many steps (nonlinear equations). Space: largest five-frame RMS difference from the $256\times256$ solution after averaging to the coarser grid. Exponax: largest five-frame RMS difference from an independent spectral solver at $64\times64$ (periodic BC only).}
+\label{tab:validation}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Equation & Time error & Space, $64^2$ & Space, $128^2$ & Exponax, $64^2$ \\
+\midrule
+Diffusion & $2.9\times10^{-14}$ (exact) & $1.0\times10^{-4}$ & $2.0\times10^{-5}$ & $5.0\times10^{-5}$ \\
+Advection--diffusion & $2.3\times10^{-10}$ (exact) & $4.0\times10^{-4}$ & $8.0\times10^{-5}$ & $2.4\times10^{-4}$ \\
+Linear exchange & $9.2\times10^{-13}$ (exact) & $9.1\times10^{-5}$ & $1.8\times10^{-5}$ & -- \\
+Fisher--KPP & $2.7\times10^{-12}$ (refined) & $1.2\times10^{-4}$ & $2.4\times10^{-5}$ & $6.5\times10^{-5}$ \\
+Allen--Cahn (shifted) & $4.9\times10^{-12}$ (refined) & $9.7\times10^{-5}$ & $1.9\times10^{-5}$ & $5.0\times10^{-5}$ \\
+Gray--Scott & $1.1\times10^{-12}$ (refined) & $1.0\times10^{-4}$ & $2.1\times10^{-5}$ & $4.8\times10^{-5}$ \\
+\bottomrule
+\end{tabular}
+\end{table}

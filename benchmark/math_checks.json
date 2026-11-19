@@ -1,0 +1,42 @@
+{
+  "status": "analytical calibration and numerical consistency checks only",
+  "production_trajectories_generated": false,
+  "embedding_inference_performed": false,
+  "numpy": "2.3.5",
+  "scipy": "1.17.0",
+  "formal_verification": false,
+  "continuum_heat_calibration": [
+    {
+      "anchor_nu": 0.01,
+      "candidate_nu": 0.011,
+      "five_frames": 0.005099567680304381,
+      "all_100_frames": 0.004894534801813959
+    },
+    {
+      "anchor_nu": 0.01,
+      "candidate_nu": 0.02,
+      "five_frames": 0.04751122417557591,
+      "all_100_frames": 0.04589880359874218
+    },
+    {
+      "anchor_nu": 0.01,
+      "candidate_nu": 0.05,
+      "five_frames": 0.15280001791308634,
+      "all_100_frames": 0.15041751702874953
+    }
+  ],
+  "n64_laplacian_eigenvalue_max_abs_error": {
+    "periodic": 1.0913936421275139e-11,
+    "dirichlet": 5.4569682106375694e-12,
+    "neumann": 9.094947017729282e-12
+  },
+  "linear_exchange_mode_vs_full_exponential_max_error": {
+    "periodic": 6.661338147750939e-16,
+    "dirichlet": 1.887379141862766e-15,
+    "neumann": 6.661338147750939e-16
+  },
+  "raw_kernel_identity_max_error": 4.440892098500626e-16,
+  "paired_embedding_chord_max_error": 8.881784197001252e-16,
+  "resolved_random_ranking_margins_checked": 1318,
+  "passed": true
+}

@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Main result: Spearman correlation between model similarity $S^{\mathrm{emb}}$ and $-D$, averaged over the three IC families (153 pairs each). Samples 0--9, with the reference computed on the same samples. Brackets: 95\% bootstrap intervals. Baseline values in parentheses use all 100 samples.}
+\label{tab:main}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lccc}
+\toprule
+Model & Text & Image & Joint \\
+\midrule
+EmbeddingGemma 2 & 0.21 {\scriptsize[0.21, 0.23]} & 0.76 {\scriptsize[0.73, 0.79]} & 0.23 {\scriptsize[0.22, 0.24]} \\
+Qwen3-VL-Emb.-2B & 0.44 {\scriptsize[0.39, 0.45]} & 0.78 {\scriptsize[0.73, 0.83]} & 0.39 {\scriptsize[0.35, 0.40]} \\
+GME-Qwen2-VL-2B & 0.46 {\scriptsize[0.44, 0.47]} & 0.83 {\scriptsize[0.75, 0.84]} & 0.50 {\scriptsize[0.47, 0.54]} \\
+\midrule
+Char.\ TF--IDF (text) & 0.35 {\scriptsize(0.36)} & -- & -- \\
+Rendered pixels (image) & -- & 0.93 {\scriptsize(0.95)} & -- \\
+Fourier magnitudes (image) & -- & 0.44 {\scriptsize(0.42)} & -- \\
+Initial frame only (image) & -- & undefined & -- \\
+\bottomrule
+\end{tabular}}
+\end{table}

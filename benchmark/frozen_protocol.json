@@ -1,0 +1,210 @@
+{
+  "frozen_at": "2026-11-19T05:36:15+00:00",
+  "status": "frozen before any test realization was simulated or encoded",
+  "pilot_report": "benchmark/pilot_report.json",
+  "coefficients": {
+    "diffusion": {
+      "D_u": 0.01,
+      "D_v": 0.005
+    },
+    "advection_diffusion": {
+      "D_u": 0.01,
+      "D_v": 0.005,
+      "c_x": 0.25,
+      "c_y": 0.1
+    },
+    "linear_exchange": {
+      "D_u": 0.01,
+      "D_v": 0.005,
+      "kappa": 0.5
+    },
+    "fisher_kpp": {
+      "D_u": 0.01,
+      "D_v": 0.005,
+      "r": 1.0
+    },
+    "shifted_allen_cahn": {
+      "D_u": 0.01,
+      "D_v": 0.005,
+      "a": 4.0
+    },
+    "gray_scott": {
+      "D_u": 0.01,
+      "D_v": 0.005,
+      "F": 0.04,
+      "k": 0.06
+    }
+  },
+  "coefficients_changed_by_pilot": false,
+  "solver": {
+    "name": "cc-fd-etdrk4",
+    "version": "1.0.0",
+    "grid": [
+      64,
+      64
+    ],
+    "scheme": "ETDRK4 (Cox-Matthews; Kassam-Trefethen contour, 64 points); diffusion exact in the BC eigenbasis (rFFT / DST-II / DCT-II); advection, exchange and reactions explicit",
+    "substeps_per_output_interval": 4,
+    "internal_step": 0.0025252525252525255,
+    "float": "float64 internally, float32 stored"
+  },
+  "observation_indices": [
+    0,
+    25,
+    50,
+    74,
+    99
+  ],
+  "test_realizations": [
+    0,
+    99
+  ],
+  "pilot_realizations": [
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119
+  ],
+  "contact_sheet": {
+    "layout": "2 channel rows (u, v) x 5 time columns",
+    "panel_pixels": 128,
+    "upsampling": "nearest-neighbour x2",
+    "size_wh": [
+      688,
+      286
+    ],
+    "colormap": "viridis",
+    "channel_ranges": [
+      [
+        0.0,
+        0.8
+      ],
+      [
+        0.0,
+        0.8
+      ]
+    ],
+    "labels": "t=0.00, t=0.25, t=0.51, t=0.75, t=1.00 and u, v only",
+    "orientation": "x to the right, y upward",
+    "clipping": "display only; arrays unmodified"
+  },
+  "models": {
+    "embeddinggemma2": {
+      "checkpoint": "google/embeddinggemma-2",
+      "revision": "f9972ac22e696a105c482202646979e33e4b5a1e"
+    },
+    "qwen3vl2b": {
+      "checkpoint": "Qwen/Qwen3-VL-Embedding-2B",
+      "revision": "9f2f7e710d6d81056aa5c0a4f04764fec6bb7bda"
+    },
+    "gme2b": {
+      "checkpoint": "Alibaba-NLP/gme-Qwen2-VL-2B-Instruct",
+      "revision": "9cfa6413f704a7c1cf5064d240748e10c876b286"
+    }
+  },
+  "model_inputs": {
+    "embeddinggemma2": {
+      "text_prefix": "task: sentence similarity | query: ",
+      "image_prefix": null,
+      "combined": "task: sentence similarity | query: {deck}\\n<|image|>",
+      "dtype": "bfloat16",
+      "pooling": "checkpoint (mean) + normalize",
+      "image_tokens": 280
+    },
+    "qwen3vl2b": {
+      "instruction": "Represent the user's input.",
+      "order": "image then text",
+      "dtype": "bfloat16",
+      "min_pixels": 4096,
+      "max_pixels": 1843200,
+      "pooling": "last token"
+    },
+    "gme2b": {
+      "instruction": "You are a helpful assistant.",
+      "order": "image then text",
+      "dtype": "bfloat16",
+      "min_pixels": 200704,
+      "max_pixels": 1003520,
+      "max_length": 1800,
+      "pooling": "last token",
+      "positions": "sequential, as in the reference gme_inference.py"
+    },
+    "normalization": "every embedding re-normalized in float32; full native dimension",
+    "precision": "bfloat16 for all models (CPU with native AMX bf16); diagnostic: EmbeddingGemma 2 float32 re-encoding of realization 0 for all 54 configurations and three modes, if time permits",
+    "batch_size": 1
+  },
+  "embedding_subset": {
+    "reason": "CPU-only environment (2 cores, no GPU); the full 48,600-input run is not feasible here",
+    "main_realizations": [
+      0,
+      9
+    ],
+    "control_realizations": [
+      0,
+      2
+    ],
+    "rule": "first realizations in index order; fixed before any embedding of test inputs"
+  },
+  "controls": {
+    "time_order": "panels reversed (index order 4,3,2,1,0) with header labels unchanged",
+    "first_frame": "single t=0 column sheet; one per IC family and realization, encoded twice",
+    "notation": "diffusion as second partials, terms reordered, coordinates renamed x->xi, y->zeta",
+    "mismatch": "sheet of configuration (p,f,b) with the deck of (p+1 mod 6, f, b), same realization",
+    "heat_calibration": {
+      "anchor": 0.01,
+      "candidates": [
+        0.011,
+        0.02,
+        0.05
+      ]
+    }
+  },
+  "baselines": {
+    "text": "character 3-5-gram TF-IDF (sublinear tf, fitted on the analysed decks), cosine",
+    "image_pixels": "rendered sheet RGB pixels, flattened, L2-normalized",
+    "image_fourier": "|2D DFT| of each 64x64 field at the five frames, frequencies |k|<=8 per axis, L2-normalized",
+    "numeric_cosine": "physical cosine of trajectory profiles (amplitude removed)"
+  },
+  "analysis": {
+    "reference": "five-frame RMS over matched realizations (primary); 100-frame RMS (secondary)",
+    "primary": "within each IC family, 153 off-diagonal pairs of the 18x18 matrices: Spearman(S_emb, -D), and ordered-triplet accuracy (reference ties excluded, embedding ties = 1/2)",
+    "matched_subset": "embedding and reference matrices are computed on the same realization subset; agreement with the 100-realization reference is reported separately",
+    "breakdown": "triplets whose candidates share / do not share the anchor BC",
+    "separation_rule": "triplet (i;j,k) resolved if |D_ik - D_ij| > 2 eps_i + eps_j + eps_k; eps from exact semidiscrete references (linear classes; certified up to roundoff) or ||fl32(X_m)-X_2m|| + 2||X_m-X_2m|| (nonlinear; convergence-checked)",
+    "bootstrap": {
+      "replicates": 2000,
+      "seed": 20261119,
+      "unit": "realization index, resampled jointly"
+    },
+    "full_matrix": "54x54 matrix as secondary analysis"
+  },
+  "script_sha256": {
+    "check_reference.py": "1e34f44030bfe831458434ba7752df785ac76a8070f688c385c696ba3b7e7fd5",
+    "controls.py": "26feb2ccf913951dde8e86e405bf770f2d1ba40575745d90d98419780944f9ce",
+    "embed_models.py": "8717c8c349bd84d0c86af1945c5501ff371f2706dadd5b06eae36bc8c509c3bb",
+    "freeze_protocol.py": "f03d7a654b9bdc466d342bba81379fae2b5127925abf21bc5af3e43aa8157ed3",
+    "make_decks.py": "097e2a72f1383c965c3cc7a71bb8b435c97ac0a79bffe192dfb28f840ff14ad1",
+    "pilot.py": "173601272a9d9929d34c60e5678f6abb51e6a918f00e7784ebe18ce7c4fdaf69",
+    "render.py": "7fa42ab0e6a421f9814c539f681e19b8970cdead9c8a8661cb2e7f23c5d7944c",
+    "run_embeddings.py": "b1f1ccbd5f0a60ed27ff8c652957d1d539bf1880bf2da25266a776518ae57bf2",
+    "run_simulations.py": "0cabb34812b535ff0b4ec350c06f1c47262c190f02b354a75ee8ff587784a603",
+    "simulator.py": "45ba27e1028a0f1d832f1c4fa78e4db11139249b19bb66ec2f3acf645112ae34",
+    "validate_simulator.py": "fe27c33e9a503e9d0e68d7de802e88e540bec99570fbe3dc29a8f74b133475b2"
+  }
+}

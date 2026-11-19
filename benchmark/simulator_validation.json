@@ -1,0 +1,1118 @@
+{
+  "purpose": "simulator validation on pilot realizations and manufactured solutions",
+  "solver": {
+    "name": "cc-fd-etdrk4",
+    "version": "1.0.0"
+  },
+  "pilot_realizations": [
+    100,
+    101,
+    102,
+    103
+  ],
+  "test_realizations_used": false,
+  "operator_identities": {
+    "periodic": {
+      "spectral_vs_stencil_rel_max": 3.90706382511011e-16,
+      "dense_vs_stencil_rel_max": 1.953531912555055e-16,
+      "gradient_vs_dense_max": 0.0
+    },
+    "dirichlet_zero": {
+      "spectral_vs_stencil_rel_max": 4.663264107157913e-16,
+      "dense_vs_stencil_rel_max": 1.865305642863165e-16,
+      "gradient_vs_dense_max": 0.0
+    },
+    "neumann_zero": {
+      "spectral_vs_stencil_rel_max": 4.609449115287651e-16,
+      "dense_vs_stencil_rel_max": 1.8437796461150602e-16,
+      "gradient_vs_dense_max": 0.0
+    }
+  },
+  "linear_vs_exact_semidiscrete": {
+    "diffusion/periodic/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 2.1871393585115584e-14,
+        "rms": 1.066050649892121e-15,
+        "rms_over_signal": 1.8552842643359787e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.225997164373439e-14,
+        "rms": 1.0718174206714658e-15,
+        "rms_over_signal": 1.8653203719862425e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.3647750424515834e-14,
+        "rms": 1.1223123908321412e-15,
+        "rms_over_signal": 1.9531984888249648e-14
+      }
+    },
+    "diffusion/periodic/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.5701663020072374e-14,
+        "rms": 1.6568513759920857e-15,
+        "rms_over_signal": 1.7296712131874453e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.5923707624997405e-14,
+        "rms": 1.6713284245048716e-15,
+        "rms_over_signal": 1.744784538635535e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.808864252301646e-14,
+        "rms": 1.75080785247981e-15,
+        "rms_over_signal": 1.8277571459561766e-14
+      }
+    },
+    "diffusion/periodic/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 1.5681900222830336e-14,
+        "rms": 7.696337784837252e-16,
+        "rms_over_signal": 1.7539825658934773e-14
+      },
+      "substeps_2": {
+        "max_abs": 1.5959455978986625e-14,
+        "rms": 7.758828761813325e-16,
+        "rms_over_signal": 1.7682241554917957e-14
+      },
+      "substeps_4": {
+        "max_abs": 1.712519015484304e-14,
+        "rms": 8.153219797290608e-16,
+        "rms_over_signal": 1.8581052157714883e-14
+      }
+    },
+    "diffusion/dirichlet_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 2.1316282072803006e-14,
+        "rms": 1.0623078894989275e-15,
+        "rms_over_signal": 1.8490663309606347e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.3148150063434514e-14,
+        "rms": 1.0781961613563974e-15,
+        "rms_over_signal": 1.8767216546565305e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.3592239273284576e-14,
+        "rms": 1.169698600064872e-15,
+        "rms_over_signal": 2.035991938054723e-14
+      }
+    },
+    "diffusion/dirichlet_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.4646951146678475e-14,
+        "rms": 1.6528054453581363e-15,
+        "rms_over_signal": 1.7261894479931713e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.6867397195928788e-14,
+        "rms": 1.681502352886745e-15,
+        "rms_over_signal": 1.756160488507977e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.886579864025407e-14,
+        "rms": 1.9147599382988538e-15,
+        "rms_over_signal": 1.9997746318020785e-14
+      }
+    },
+    "diffusion/dirichlet_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 1.5182299861749016e-14,
+        "rms": 7.66613870219418e-16,
+        "rms_over_signal": 1.7473975820280763e-14
+      },
+      "substeps_2": {
+        "max_abs": 1.657007864253046e-14,
+        "rms": 7.78871846772881e-16,
+        "rms_over_signal": 1.7753380608299373e-14
+      },
+      "substeps_4": {
+        "max_abs": 1.7180701306074297e-14,
+        "rms": 8.59063546682186e-16,
+        "rms_over_signal": 1.9581247125769684e-14
+      }
+    },
+    "diffusion/neumann_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 2.2037927038809357e-14,
+        "rms": 1.0665688806640336e-15,
+        "rms_over_signal": 1.8560709535539244e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.2370993946196904e-14,
+        "rms": 1.0738538435758864e-15,
+        "rms_over_signal": 1.868748435808975e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.3092638912203256e-14,
+        "rms": 1.1349726507043215e-15,
+        "rms_over_signal": 1.975108976308081e-14
+      }
+    },
+    "diffusion/neumann_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.5701663020072374e-14,
+        "rms": 1.6574045103801835e-15,
+        "rms_over_signal": 1.730244745446584e-14
+      },
+      "substeps_2": {
+        "max_abs": 2.603472992745992e-14,
+        "rms": 1.6745666479768805e-15,
+        "rms_over_signal": 1.748161131103399e-14
+      },
+      "substeps_4": {
+        "max_abs": 2.781108676686017e-14,
+        "rms": 1.7463420803633936e-15,
+        "rms_over_signal": 1.823090977113311e-14
+      }
+    },
+    "diffusion/neumann_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 1.5709655798445965e-14,
+        "rms": 7.699396413950428e-16,
+        "rms_over_signal": 1.7545995177137688e-14
+      },
+      "substeps_2": {
+        "max_abs": 1.5931700403370996e-14,
+        "rms": 7.771694586152084e-16,
+        "rms_over_signal": 1.7710753985823997e-14
+      },
+      "substeps_4": {
+        "max_abs": 1.6764367671839864e-14,
+        "rms": 8.182506325736533e-16,
+        "rms_over_signal": 1.8646944358929095e-14
+      }
+    },
+    "advection_diffusion/periodic/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 1.0814455109198207e-08,
+        "rms": 6.186222734554703e-10,
+        "rms_over_signal": 1.0766094177850051e-08
+      },
+      "substeps_2": {
+        "max_abs": 6.722760126365301e-10,
+        "rms": 3.854063153892835e-11,
+        "rms_over_signal": 6.707357407359633e-10
+      },
+      "substeps_4": {
+        "max_abs": 4.190647828750116e-11,
+        "rms": 2.4049394169918643e-12,
+        "rms_over_signal": 4.1853979991268365e-11
+      }
+    },
+    "advection_diffusion/periodic/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.082591127328115e-08,
+        "rms": 1.3773178009911546e-09,
+        "rms_over_signal": 1.4378519318659841e-08
+      },
+      "substeps_2": {
+        "max_abs": 1.2962747542033526e-09,
+        "rms": 8.567393629829614e-11,
+        "rms_over_signal": 8.943936884313855e-10
+      },
+      "substeps_4": {
+        "max_abs": 8.082573499379464e-11,
+        "rms": 5.3419308391193374e-12,
+        "rms_over_signal": 5.5767126304436296e-11
+      }
+    },
+    "advection_diffusion/periodic/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 4.991607210902416e-09,
+        "rms": 3.587132811731611e-10,
+        "rms_over_signal": 8.175015948126998e-09
+      },
+      "substeps_2": {
+        "max_abs": 3.093950928789724e-10,
+        "rms": 2.2344537990840794e-11,
+        "rms_over_signal": 5.092283001935313e-10
+      },
+      "substeps_4": {
+        "max_abs": 1.9246770843750483e-11,
+        "rms": 1.3941929799390783e-12,
+        "rms_over_signal": 3.177342586394717e-11
+      }
+    },
+    "advection_diffusion/dirichlet_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 3.3896344953099344e-08,
+        "rms": 1.1609948496938266e-09,
+        "rms_over_signal": 2.0250490336541245e-08
+      },
+      "substeps_2": {
+        "max_abs": 2.4032883148839e-09,
+        "rms": 8.119522541439882e-11,
+        "rms_over_signal": 1.4162363666481252e-09
+      },
+      "substeps_4": {
+        "max_abs": 1.5920050694395727e-10,
+        "rms": 5.3790693127460366e-12,
+        "rms_over_signal": 9.382366439099663e-11
+      }
+    },
+    "advection_diffusion/dirichlet_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 5.351861586538886e-08,
+        "rms": 2.581462051638514e-09,
+        "rms_over_signal": 2.707114446085177e-08
+      },
+      "substeps_2": {
+        "max_abs": 3.5349362256797967e-09,
+        "rms": 1.7571580443090764e-10,
+        "rms_over_signal": 1.8426875277072577e-09
+      },
+      "substeps_4": {
+        "max_abs": 2.2667535209963674e-10,
+        "rms": 1.1483422410577999e-11,
+        "rms_over_signal": 1.2042376791261513e-10
+      }
+    },
+    "advection_diffusion/dirichlet_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 3.4499945410909616e-08,
+        "rms": 1.03780424006747e-09,
+        "rms_over_signal": 2.3759694064384702e-08
+      },
+      "substeps_2": {
+        "max_abs": 2.4453154865572424e-09,
+        "rms": 7.348096161413661e-11,
+        "rms_over_signal": 1.6822875645556985e-09
+      },
+      "substeps_4": {
+        "max_abs": 1.6195495812498795e-10,
+        "rms": 4.890829955932303e-12,
+        "rms_over_signal": 1.1197162141708432e-10
+      }
+    },
+    "advection_diffusion/neumann_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 1.0814455164709358e-08,
+        "rms": 6.18737294357483e-10,
+        "rms_over_signal": 1.0770928385854133e-08
+      },
+      "substeps_2": {
+        "max_abs": 6.722761236588326e-10,
+        "rms": 3.8583401676120465e-11,
+        "rms_over_signal": 6.716567113797281e-10
+      },
+      "substeps_4": {
+        "max_abs": 4.190647828750116e-11,
+        "rms": 2.4092698605669163e-12,
+        "rms_over_signal": 4.19403733490971e-11
+      }
+    },
+    "advection_diffusion/neumann_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.082591127328115e-08,
+        "rms": 1.3770324927847642e-09,
+        "rms_over_signal": 1.4397109629749324e-08
+      },
+      "substeps_2": {
+        "max_abs": 1.2962745321587477e-09,
+        "rms": 8.569983515562991e-11,
+        "rms_over_signal": 8.960063966913973e-10
+      },
+      "substeps_4": {
+        "max_abs": 8.082573499379464e-11,
+        "rms": 5.345481350297406e-12,
+        "rms_over_signal": 5.5887919440722504e-11
+      }
+    },
+    "advection_diffusion/neumann_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 4.991607266413567e-09,
+        "rms": 3.59007642201846e-10,
+        "rms_over_signal": 8.192328951922435e-09
+      },
+      "substeps_2": {
+        "max_abs": 3.093951483901236e-10,
+        "rms": 2.2412809617661657e-11,
+        "rms_over_signal": 5.114462410843662e-10
+      },
+      "substeps_4": {
+        "max_abs": 1.924685411047733e-11,
+        "rms": 1.4007220661575375e-12,
+        "rms_over_signal": 3.196359794961491e-11
+      }
+    },
+    "linear_exchange/periodic/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 1.087476220185124e-10,
+        "rms": 2.0816602731588123e-12,
+        "rms_over_signal": 3.7915791542723104e-11
+      },
+      "substeps_2": {
+        "max_abs": 6.799893981224159e-12,
+        "rms": 1.2989511605159032e-13,
+        "rms_over_signal": 2.365936558493464e-12
+      },
+      "substeps_4": {
+        "max_abs": 4.2432724001173483e-13,
+        "rms": 8.0542344786405e-15,
+        "rms_over_signal": 1.4670149565997329e-13
+      }
+    },
+    "linear_exchange/periodic/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.293034651046355e-10,
+        "rms": 7.557996382178846e-12,
+        "rms_over_signal": 8.089117673482312e-11
+      },
+      "substeps_2": {
+        "max_abs": 1.4340306719873297e-11,
+        "rms": 4.722069473909989e-13,
+        "rms_over_signal": 5.053902344658828e-12
+      },
+      "substeps_4": {
+        "max_abs": 8.961720254774264e-13,
+        "rms": 2.950672089375637e-14,
+        "rms_over_signal": 3.1580239708898345e-13
+      }
+    },
+    "linear_exchange/periodic/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 6.227790505519692e-11,
+        "rms": 1.3769006571727227e-12,
+        "rms_over_signal": 3.316671551479382e-11
+      },
+      "substeps_2": {
+        "max_abs": 3.893052546999343e-12,
+        "rms": 8.587612267935832e-14,
+        "rms_over_signal": 2.068579832235871e-12
+      },
+      "substeps_4": {
+        "max_abs": 2.4319435354414054e-13,
+        "rms": 5.320134564676307e-15,
+        "rms_over_signal": 1.281511405255332e-13
+      }
+    },
+    "linear_exchange/dirichlet_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 1.0876294309625223e-10,
+        "rms": 2.0811800128279596e-12,
+        "rms_over_signal": 3.791136101357148e-11
+      },
+      "substeps_2": {
+        "max_abs": 6.81538159241768e-12,
+        "rms": 1.3056393504879515e-13,
+        "rms_over_signal": 2.378389397590544e-12
+      },
+      "substeps_4": {
+        "max_abs": 4.3953729544909947e-13,
+        "rms": 9.981592550132255e-15,
+        "rms_over_signal": 1.8182749994040095e-13
+      }
+    },
+    "linear_exchange/dirichlet_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.293295553457142e-10,
+        "rms": 7.557298803782869e-12,
+        "rms_over_signal": 8.091178718676923e-11
+      },
+      "substeps_2": {
+        "max_abs": 1.436650798325445e-11,
+        "rms": 4.723830469935033e-13,
+        "rms_over_signal": 5.057542061171901e-12
+      },
+      "substeps_4": {
+        "max_abs": 9.227063557659676e-13,
+        "rms": 3.080736561944045e-14,
+        "rms_over_signal": 3.298372970958123e-13
+      }
+    },
+    "linear_exchange/dirichlet_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 6.2278043833075e-11,
+        "rms": 1.3764455390270704e-12,
+        "rms_over_signal": 3.3160117938200744e-11
+      },
+      "substeps_2": {
+        "max_abs": 3.893191324877421e-12,
+        "rms": 8.628995441917881e-14,
+        "rms_over_signal": 2.0788218525845077e-12
+      },
+      "substeps_4": {
+        "max_abs": 2.4330537584660306e-13,
+        "rms": 6.794431428789976e-15,
+        "rms_over_signal": 1.6368547909345388e-13
+      }
+    },
+    "linear_exchange/neumann_zero/single_gaussian": {
+      "substeps_1": {
+        "max_abs": 1.0874828815232718e-10,
+        "rms": 2.0821339828623558e-12,
+        "rms_over_signal": 3.7922880293467123e-11
+      },
+      "substeps_2": {
+        "max_abs": 6.800560115038934e-12,
+        "rms": 1.300363116660919e-13,
+        "rms_over_signal": 2.3684121779415686e-12
+      },
+      "substeps_4": {
+        "max_abs": 4.247713292215849e-13,
+        "rms": 8.152123357614454e-15,
+        "rms_over_signal": 1.4847843643730944e-13
+      }
+    },
+    "linear_exchange/neumann_zero/low_frequency": {
+      "substeps_1": {
+        "max_abs": 2.293043532830552e-10,
+        "rms": 7.55803141840958e-12,
+        "rms_over_signal": 8.089144079970684e-11
+      },
+      "substeps_2": {
+        "max_abs": 1.4340972853688072e-11,
+        "rms": 4.722328305243143e-13,
+        "rms_over_signal": 5.054172434503298e-12
+      },
+      "substeps_4": {
+        "max_abs": 8.970602038971265e-13,
+        "rms": 2.952581700450451e-14,
+        "rms_over_signal": 3.160063442532549e-13
+      }
+    },
+    "linear_exchange/neumann_zero/patch_mixture": {
+      "substeps_1": {
+        "max_abs": 6.227815485537747e-11,
+        "rms": 1.3771261006785835e-12,
+        "rms_over_signal": 3.3171059362902027e-11
+      },
+      "substeps_2": {
+        "max_abs": 3.893274591604268e-12,
+        "rms": 8.596692942138263e-14,
+        "rms_over_signal": 2.070699348213609e-12
+      },
+      "substeps_4": {
+        "max_abs": 2.433608869978343e-13,
+        "rms": 5.40029209206763e-15,
+        "rms_over_signal": 1.3007771000398374e-13
+      }
+    }
+  },
+  "linear_vs_exact_worst_max_abs": {
+    "substeps_1": 5.351861586538886e-08,
+    "substeps_2": 3.5349362256797967e-09,
+    "substeps_4": 2.2667535209963674e-10
+  },
+  "manufactured_continuum": {
+    "diffusion/periodic": {
+      "rms_error_n32_64_128": [
+        0.0007861191508117466,
+        0.00019642635700158577,
+        4.910000916049484e-05
+      ],
+      "observed_order": [
+        2.0007594687874026,
+        2.000193328416572
+      ]
+    },
+    "linear_exchange/periodic": {
+      "rms_error_n32_64_128": [
+        0.0007631576954667483,
+        0.00019073394681187516,
+        4.76799034771291e-05
+      ],
+      "observed_order": [
+        2.0004195626196215,
+        2.000108416912234
+      ]
+    },
+    "diffusion/dirichlet_zero": {
+      "rms_error_n32_64_128": [
+        0.00012012578856594986,
+        3.004873745352496e-05,
+        7.5132648369497895e-06
+      ],
+      "observed_order": [
+        1.9991696214554362,
+        1.9997925128439007
+      ]
+    },
+    "linear_exchange/dirichlet_zero": {
+      "rms_error_n32_64_128": [
+        0.00010955038090004721,
+        2.7404100259240712e-05,
+        6.852056553873054e-06
+      ],
+      "observed_order": [
+        1.9991308269787407,
+        1.9997828044523176
+      ]
+    },
+    "diffusion/neumann_zero": {
+      "rms_error_n32_64_128": [
+        0.00012012578856595795,
+        3.0048737453501122e-05,
+        7.51326483696044e-06
+      ],
+      "observed_order": [
+        1.9991696214566779,
+        1.999792512840711
+      ]
+    },
+    "linear_exchange/neumann_zero": {
+      "rms_error_n32_64_128": [
+        0.00010955038090005639,
+        2.7404100259237995e-05,
+        6.852056553884722e-06
+      ],
+      "observed_order": [
+        1.9991308269790045,
+        1.999782804449718
+      ]
+    }
+  },
+  "time_refinement_vs_substeps_16": {
+    "fisher_kpp/periodic/single_gaussian": {
+      "substeps_1_max_abs": 3.674319737356768e-10,
+      "substeps_2_max_abs": 2.290612144406623e-11,
+      "substeps_4_max_abs": 1.425526363618701e-12,
+      "substeps_8_max_abs": 8.393286066166183e-14
+    },
+    "fisher_kpp/periodic/low_frequency": {
+      "substeps_1_max_abs": 6.854123935084999e-10,
+      "substeps_2_max_abs": 4.2928438581668615e-11,
+      "substeps_4_max_abs": 2.6776358907909525e-12,
+      "substeps_8_max_abs": 1.5826229216031606e-13
+    },
+    "fisher_kpp/periodic/patch_mixture": {
+      "substeps_1_max_abs": 1.1848771963585136e-10,
+      "substeps_2_max_abs": 7.413070157724633e-12,
+      "substeps_4_max_abs": 4.616862447903713e-13,
+      "substeps_8_max_abs": 2.6992297286199118e-14
+    },
+    "fisher_kpp/dirichlet_zero/single_gaussian": {
+      "substeps_1_max_abs": 3.6743130760186204e-10,
+      "substeps_2_max_abs": 2.2905344287948992e-11,
+      "substeps_4_max_abs": 1.4245271628965384e-12,
+      "substeps_8_max_abs": 8.315570454442422e-14
+    },
+    "fisher_kpp/dirichlet_zero/low_frequency": {
+      "substeps_1_max_abs": 6.854117273746851e-10,
+      "substeps_2_max_abs": 4.292816102591246e-11,
+      "substeps_4_max_abs": 2.6772473127323337e-12,
+      "substeps_8_max_abs": 1.5754064719430971e-13
+    },
+    "fisher_kpp/dirichlet_zero/patch_mixture": {
+      "substeps_1_max_abs": 1.1848783065815383e-10,
+      "substeps_2_max_abs": 7.413097913300248e-12,
+      "substeps_4_max_abs": 4.618250226684495e-13,
+      "substeps_8_max_abs": 2.733924198139448e-14
+    },
+    "fisher_kpp/neumann_zero/single_gaussian": {
+      "substeps_1_max_abs": 3.674320847579793e-10,
+      "substeps_2_max_abs": 2.2906010421763767e-11,
+      "substeps_4_max_abs": 1.4254153413162385e-12,
+      "substeps_8_max_abs": 8.404388296412435e-14
+    },
+    "fisher_kpp/neumann_zero/low_frequency": {
+      "substeps_1_max_abs": 6.85412171463895e-10,
+      "substeps_2_max_abs": 4.292854960397108e-11,
+      "substeps_4_max_abs": 2.6774693573372588e-12,
+      "substeps_8_max_abs": 1.5815126985785355e-13
+    },
+    "fisher_kpp/neumann_zero/patch_mixture": {
+      "substeps_1_max_abs": 1.184877751470026e-10,
+      "substeps_2_max_abs": 7.413042402149017e-12,
+      "substeps_4_max_abs": 4.61714000365987e-13,
+      "substeps_8_max_abs": 2.7006175074006933e-14
+    },
+    "shifted_allen_cahn/periodic/single_gaussian": {
+      "substeps_1_max_abs": 5.859907004079901e-10,
+      "substeps_2_max_abs": 3.7027936272693296e-11,
+      "substeps_4_max_abs": 2.3200330545591896e-12,
+      "substeps_8_max_abs": 1.3677947663381929e-13
+    },
+    "shifted_allen_cahn/periodic/low_frequency": {
+      "substeps_1_max_abs": 1.2525761539095015e-09,
+      "substeps_2_max_abs": 7.832395843010431e-11,
+      "substeps_4_max_abs": 4.8808179720083444e-12,
+      "substeps_8_max_abs": 2.867150961094467e-13
+    },
+    "shifted_allen_cahn/periodic/patch_mixture": {
+      "substeps_1_max_abs": 1.2628567636063792e-10,
+      "substeps_2_max_abs": 7.881112429330983e-12,
+      "substeps_4_max_abs": 4.90357754401316e-13,
+      "substeps_8_max_abs": 2.8727020762175925e-14
+    },
+    "shifted_allen_cahn/dirichlet_zero/single_gaussian": {
+      "substeps_1_max_abs": 5.859902563187802e-10,
+      "substeps_2_max_abs": 3.7027381161180983e-11,
+      "substeps_4_max_abs": 2.3193669207444145e-12,
+      "substeps_8_max_abs": 1.3633538742396922e-13
+    },
+    "shifted_allen_cahn/dirichlet_zero/low_frequency": {
+      "substeps_1_max_abs": 1.2525765424875601e-09,
+      "substeps_2_max_abs": 7.832440251931416e-11,
+      "substeps_4_max_abs": 4.881428594671888e-12,
+      "substeps_8_max_abs": 2.8754776337791554e-13
+    },
+    "shifted_allen_cahn/dirichlet_zero/patch_mixture": {
+      "substeps_1_max_abs": 1.262856486050623e-10,
+      "substeps_2_max_abs": 7.881140184906599e-12,
+      "substeps_4_max_abs": 4.903855099769316e-13,
+      "substeps_8_max_abs": 2.88935542158697e-14
+    },
+    "shifted_allen_cahn/neumann_zero/single_gaussian": {
+      "substeps_1_max_abs": 5.85990922452595e-10,
+      "substeps_2_max_abs": 3.702815831729822e-11,
+      "substeps_4_max_abs": 2.3200330545591896e-12,
+      "substeps_8_max_abs": 1.3700152123874432e-13
+    },
+    "shifted_allen_cahn/neumann_zero/low_frequency": {
+      "substeps_1_max_abs": 1.2525763204429552e-09,
+      "substeps_2_max_abs": 7.832423598586047e-11,
+      "substeps_4_max_abs": 4.881206550066963e-12,
+      "substeps_8_max_abs": 2.870481630168342e-13
+    },
+    "shifted_allen_cahn/neumann_zero/patch_mixture": {
+      "substeps_1_max_abs": 1.2628575962736477e-10,
+      "substeps_2_max_abs": 7.88119569605783e-12,
+      "substeps_4_max_abs": 4.904687767037785e-13,
+      "substeps_8_max_abs": 2.886579864025407e-14
+    },
+    "gray_scott/periodic/single_gaussian": {
+      "substeps_1_max_abs": 6.072609082252711e-11,
+      "substeps_2_max_abs": 3.7873038039037965e-12,
+      "substeps_4_max_abs": 2.370326157574709e-13,
+      "substeps_8_max_abs": 1.4932499681208355e-14
+    },
+    "gray_scott/periodic/low_frequency": {
+      "substeps_1_max_abs": 2.78154388411167e-10,
+      "substeps_2_max_abs": 1.733435617268242e-11,
+      "substeps_4_max_abs": 1.0795808691455022e-12,
+      "substeps_8_max_abs": 6.483702463810914e-14
+    },
+    "gray_scott/periodic/patch_mixture": {
+      "substeps_1_max_abs": 6.2582439230851605e-12,
+      "substeps_2_max_abs": 3.909927936973645e-13,
+      "substeps_4_max_abs": 2.4591439995447217e-14,
+      "substeps_8_max_abs": 6.716849298982197e-15
+    },
+    "gray_scott/dirichlet_zero/single_gaussian": {
+      "substeps_1_max_abs": 1.5201147526605792e-10,
+      "substeps_2_max_abs": 8.623168802276981e-12,
+      "substeps_4_max_abs": 5.243853582696106e-13,
+      "substeps_8_max_abs": 3.067115788776831e-14
+    },
+    "gray_scott/dirichlet_zero/low_frequency": {
+      "substeps_1_max_abs": 2.781526120543276e-10,
+      "substeps_2_max_abs": 1.7332801860447944e-11,
+      "substeps_4_max_abs": 1.0781375792134895e-12,
+      "substeps_8_max_abs": 6.261657858885883e-14
+    },
+    "gray_scott/dirichlet_zero/patch_mixture": {
+      "substeps_1_max_abs": 1.5201147128161493e-10,
+      "substeps_2_max_abs": 8.623163354161065e-12,
+      "substeps_4_max_abs": 5.243830814450484e-13,
+      "substeps_8_max_abs": 3.066633318810075e-14
+    },
+    "gray_scott/neumann_zero/single_gaussian": {
+      "substeps_1_max_abs": 6.072620184482957e-11,
+      "substeps_2_max_abs": 3.7873038039037965e-12,
+      "substeps_4_max_abs": 2.3669954885008337e-13,
+      "substeps_8_max_abs": 1.5210055437364645e-14
+    },
+    "gray_scott/neumann_zero/low_frequency": {
+      "substeps_1_max_abs": 2.78154388411167e-10,
+      "substeps_2_max_abs": 1.7334245150379957e-11,
+      "substeps_4_max_abs": 1.0796918914479647e-12,
+      "substeps_8_max_abs": 6.472600233564663e-14
+    },
+    "gray_scott/neumann_zero/patch_mixture": {
+      "substeps_1_max_abs": 6.258188411933929e-12,
+      "substeps_2_max_abs": 3.9093728254613325e-13,
+      "substeps_4_max_abs": 2.450817326860033e-14,
+      "substeps_8_max_abs": 6.5780714209040525e-15
+    },
+    "advection_diffusion/periodic/single_gaussian": {
+      "substeps_1_max_abs": 1.0814290851701713e-08,
+      "substeps_2_max_abs": 6.72116362565589e-10,
+      "substeps_4_max_abs": 4.174682821656006e-11,
+      "substeps_8_max_abs": 2.452704706001896e-12
+    },
+    "advection_diffusion/periodic/low_frequency": {
+      "substeps_1_max_abs": 2.0825594193585317e-08,
+      "substeps_2_max_abs": 1.2959570083737049e-09,
+      "substeps_4_max_abs": 8.050798916414692e-11,
+      "substeps_8_max_abs": 4.728217817273617e-12
+    },
+    "advection_diffusion/periodic/patch_mixture": {
+      "substeps_1_max_abs": 4.99153235411498e-09,
+      "substeps_2_max_abs": 3.0932023609153703e-10,
+      "substeps_4_max_abs": 1.917191405631513e-11,
+      "substeps_8_max_abs": 1.1252665466088274e-12
+    },
+    "advection_diffusion/dirichlet_zero/single_gaussian": {
+      "substeps_1_max_abs": 3.38956973391924e-08,
+      "substeps_2_max_abs": 2.4026408709798552e-09,
+      "substeps_4_max_abs": 1.5855306303991235e-10,
+      "substeps_8_max_abs": 9.580679999343644e-12
+    },
+    "advection_diffusion/dirichlet_zero/low_frequency": {
+      "substeps_1_max_abs": 5.3517715301043545e-08,
+      "substeps_2_max_abs": 3.534035661334478e-09,
+      "substeps_4_max_abs": 2.2577478775431814e-10,
+      "substeps_8_max_abs": 1.3519463326616687e-11
+    },
+    "advection_diffusion/dirichlet_zero/patch_mixture": {
+      "substeps_1_max_abs": 3.449928681273362e-08,
+      "substeps_2_max_abs": 2.444656888381247e-09,
+      "substeps_4_max_abs": 1.612963599489925e-10,
+      "substeps_8_max_abs": 9.74584128676792e-12
+    },
+    "advection_diffusion/neumann_zero/single_gaussian": {
+      "substeps_1_max_abs": 1.081429112925747e-08,
+      "substeps_2_max_abs": 6.721167511436477e-10,
+      "substeps_4_max_abs": 4.174710577231622e-11,
+      "substeps_8_max_abs": 2.4530932840605146e-12
+    },
+    "advection_diffusion/neumann_zero/low_frequency": {
+      "substeps_1_max_abs": 2.0825594582163376e-08,
+      "substeps_2_max_abs": 1.2959568418402512e-09,
+      "substeps_4_max_abs": 8.050804467529815e-11,
+      "substeps_8_max_abs": 4.728495373029773e-12
+    },
+    "advection_diffusion/neumann_zero/patch_mixture": {
+      "substeps_1_max_abs": 4.991532298603829e-09,
+      "substeps_2_max_abs": 3.093201805803858e-10,
+      "substeps_4_max_abs": 1.9171886300739516e-11,
+      "substeps_8_max_abs": 1.1251555243063649e-12
+    },
+    "linear_exchange/periodic/single_gaussian": {
+      "substeps_1_max_abs": 1.0874789957426856e-10,
+      "substeps_2_max_abs": 6.800171536980315e-12,
+      "substeps_4_max_abs": 4.246047957678911e-13,
+      "substeps_8_max_abs": 2.531308496145357e-14
+    },
+    "linear_exchange/periodic/low_frequency": {
+      "substeps_1_max_abs": 2.2930213283700596e-10,
+      "substeps_2_max_abs": 1.4338974452243747e-11,
+      "substeps_4_max_abs": 8.948397578478762e-13,
+      "substeps_8_max_abs": 5.395683899678261e-14
+    },
+    "linear_exchange/periodic/patch_mixture": {
+      "substeps_1_max_abs": 6.227740545483584e-11,
+      "substeps_2_max_abs": 3.892552946638261e-12,
+      "substeps_4_max_abs": 2.426947531830592e-13,
+      "substeps_8_max_abs": 1.4377388168895777e-14
+    },
+    "linear_exchange/dirichlet_zero/single_gaussian": {
+      "substeps_1_max_abs": 1.0874701139584886e-10,
+      "substeps_2_max_abs": 6.799449892014309e-12,
+      "substeps_4_max_abs": 4.236055950457285e-13,
+      "substeps_8_max_abs": 2.425837308805967e-14
+    },
+    "linear_exchange/dirichlet_zero/low_frequency": {
+      "substeps_1_max_abs": 2.2930124465858626e-10,
+      "substeps_2_max_abs": 1.4338197296126509e-11,
+      "substeps_4_max_abs": 8.943956686380261e-13,
+      "substeps_8_max_abs": 5.3235194030776256e-14
+    },
+    "linear_exchange/dirichlet_zero/patch_mixture": {
+      "substeps_1_max_abs": 6.2277322188109e-11,
+      "substeps_2_max_abs": 3.8924696799114145e-12,
+      "substeps_4_max_abs": 2.425837308805967e-13,
+      "substeps_8_max_abs": 1.4183099139586375e-14
+    },
+    "linear_exchange/neumann_zero/single_gaussian": {
+      "substeps_1_max_abs": 1.0874784406311733e-10,
+      "substeps_2_max_abs": 6.800116025829084e-12,
+      "substeps_4_max_abs": 4.2432724001173483e-13,
+      "substeps_8_max_abs": 2.55351295663786e-14
+    },
+    "linear_exchange/neumann_zero/low_frequency": {
+      "substeps_1_max_abs": 2.2930324306003058e-10,
+      "substeps_2_max_abs": 1.4339862630663447e-11,
+      "substeps_4_max_abs": 8.959499808725013e-13,
+      "substeps_8_max_abs": 5.4511950509095186e-14
+    },
+    "linear_exchange/neumann_zero/patch_mixture": {
+      "substeps_1_max_abs": 6.227743321041146e-11,
+      "substeps_2_max_abs": 3.892552946638261e-12,
+      "substeps_4_max_abs": 2.4263924203182796e-13,
+      "substeps_8_max_abs": 1.4349632593280148e-14
+    }
+  },
+  "time_refinement_worst": {
+    "substeps_1_max_abs": 5.3517715301043545e-08,
+    "substeps_2_max_abs": 3.534035661334478e-09,
+    "substeps_4_max_abs": 2.2577478775431814e-10,
+    "substeps_8_max_abs": 1.3519463326616687e-11
+  },
+  "spatial_refinement_five_frames": {
+    "diffusion/periodic/single_gaussian": {
+      "rms_64_vs_256": 6.850840538422767e-05,
+      "rms_128_vs_256": 1.367542791076311e-05,
+      "rms_signal": 0.04691727230182183
+    },
+    "diffusion/periodic/low_frequency": {
+      "rms_64_vs_256": 9.964087517225934e-05,
+      "rms_128_vs_256": 1.986406659715324e-05,
+      "rms_signal": 0.08158439400283561
+    },
+    "diffusion/periodic/patch_mixture": {
+      "rms_64_vs_256": 4.8785040094774283e-05,
+      "rms_128_vs_256": 9.741137423216504e-06,
+      "rms_signal": 0.04170099147883289
+    },
+    "diffusion/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 6.855274792749777e-05,
+      "rms_128_vs_256": 1.368435498014063e-05,
+      "rms_signal": 0.04691200671975612
+    },
+    "diffusion/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 9.98602383798263e-05,
+      "rms_128_vs_256": 1.9908202746340458e-05,
+      "rms_signal": 0.08155870784963655
+    },
+    "diffusion/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 4.882516020015505e-05,
+      "rms_128_vs_256": 9.749196279021334e-06,
+      "rms_signal": 0.041696226626301174
+    },
+    "diffusion/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 6.84886825289366e-05,
+      "rms_128_vs_256": 1.3671454924815963e-05,
+      "rms_signal": 0.04691868785398785
+    },
+    "diffusion/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 9.963599376805532e-05,
+      "rms_128_vs_256": 1.9863078668233114e-05,
+      "rms_signal": 0.08158502843830863
+    },
+    "diffusion/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 4.877322313403789e-05,
+      "rms_128_vs_256": 9.738761128626717e-06,
+      "rms_signal": 0.04170224399318272
+    },
+    "advection_diffusion/periodic/single_gaussian": {
+      "rms_64_vs_256": 0.0001399467776507958,
+      "rms_128_vs_256": 2.7963508078718163e-05,
+      "rms_signal": 0.046917272301923565
+    },
+    "advection_diffusion/periodic/low_frequency": {
+      "rms_64_vs_256": 0.0002375641275267675,
+      "rms_128_vs_256": 4.7422827637820176e-05,
+      "rms_signal": 0.08158439400299289
+    },
+    "advection_diffusion/periodic/patch_mixture": {
+      "rms_64_vs_256": 0.00010574964445059205,
+      "rms_128_vs_256": 2.1135605912824224e-05,
+      "rms_signal": 0.04170099147888521
+    },
+    "advection_diffusion/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 0.00015491385201517603,
+      "rms_128_vs_256": 3.104728365735849e-05,
+      "rms_signal": 0.04671477931143107
+    },
+    "advection_diffusion/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 0.00039784548114614964,
+      "rms_128_vs_256": 8.042063257697059e-05,
+      "rms_signal": 0.08107253724670437
+    },
+    "advection_diffusion/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 0.0001413886770608328,
+      "rms_128_vs_256": 2.8528789501616588e-05,
+      "rms_signal": 0.04154038258982797
+    },
+    "advection_diffusion/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 0.00014188991104084159,
+      "rms_128_vs_256": 2.8354200130405744e-05,
+      "rms_signal": 0.04686283726325393
+    },
+    "advection_diffusion/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 0.00024761892296896055,
+      "rms_128_vs_256": 4.941349645760393e-05,
+      "rms_signal": 0.081369812932166
+    },
+    "advection_diffusion/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 0.00010857245030277734,
+      "rms_128_vs_256": 2.170474947520314e-05,
+      "rms_signal": 0.04164909777508932
+    },
+    "linear_exchange/periodic/single_gaussian": {
+      "rms_64_vs_256": 6.148559258360515e-05,
+      "rms_128_vs_256": 1.22748609791559e-05,
+      "rms_signal": 0.04552670063261778
+    },
+    "linear_exchange/periodic/low_frequency": {
+      "rms_64_vs_256": 9.025174497200496e-05,
+      "rms_128_vs_256": 1.799683872462544e-05,
+      "rms_signal": 0.0785398414021433
+    },
+    "linear_exchange/periodic/patch_mixture": {
+      "rms_64_vs_256": 4.546723367775093e-05,
+      "rms_128_vs_256": 9.079592386890588e-06,
+      "rms_signal": 0.04041927563183214
+    },
+    "linear_exchange/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 6.153318021375354e-05,
+      "rms_128_vs_256": 1.2284433465405776e-05,
+      "rms_signal": 0.0455221617705831
+    },
+    "linear_exchange/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 9.05466949426891e-05,
+      "rms_128_vs_256": 1.8056174459713055e-05,
+      "rms_signal": 0.07851322538797885
+    },
+    "linear_exchange/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 4.55174489544187e-05,
+      "rms_128_vs_256": 9.089684811455339e-06,
+      "rms_signal": 0.04041499654826424
+    },
+    "linear_exchange/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 6.14809823518328e-05,
+      "rms_128_vs_256": 1.2273930752369434e-05,
+      "rms_signal": 0.045527074927359565
+    },
+    "linear_exchange/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 9.024853077713221e-05,
+      "rms_128_vs_256": 1.7996189771959027e-05,
+      "rms_signal": 0.07854020880087975
+    },
+    "linear_exchange/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 4.5460133559043885e-05,
+      "rms_128_vs_256": 9.078163671992016e-06,
+      "rms_signal": 0.04041989568011759
+    },
+    "fisher_kpp/periodic/single_gaussian": {
+      "rms_64_vs_256": 9.126531230362167e-05,
+      "rms_128_vs_256": 1.8219267862689047e-05,
+      "rms_signal": 0.0690060256076069
+    },
+    "fisher_kpp/periodic/low_frequency": {
+      "rms_64_vs_256": 0.00012079740080576792,
+      "rms_128_vs_256": 2.4087236186587556e-05,
+      "rms_signal": 0.12035585127719546
+    },
+    "fisher_kpp/periodic/patch_mixture": {
+      "rms_64_vs_256": 6.946820867144435e-05,
+      "rms_128_vs_256": 1.3871867046255624e-05,
+      "rms_signal": 0.06445782842538804
+    },
+    "fisher_kpp/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 9.147897278929777e-05,
+      "rms_128_vs_256": 1.826230412886964e-05,
+      "rms_signal": 0.068984261683432
+    },
+    "fisher_kpp/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 0.00012167822386747603,
+      "rms_128_vs_256": 2.4264516996011357e-05,
+      "rms_signal": 0.12025413414806174
+    },
+    "fisher_kpp/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 6.964309544795523e-05,
+      "rms_128_vs_256": 1.3907011281004902e-05,
+      "rms_signal": 0.06443863154376933
+    },
+    "fisher_kpp/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 9.118195561695592e-05,
+      "rms_128_vs_256": 1.8202462978445305e-05,
+      "rms_signal": 0.06901165342162174
+    },
+    "fisher_kpp/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 0.00012078361323787136,
+      "rms_128_vs_256": 2.4084442499381536e-05,
+      "rms_signal": 0.1203580415160761
+    },
+    "fisher_kpp/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 6.943256977334866e-05,
+      "rms_128_vs_256": 1.3864706591744773e-05,
+      "rms_signal": 0.06446257716494526
+    },
+    "shifted_allen_cahn/periodic/single_gaussian": {
+      "rms_64_vs_256": 5.6106353827314725e-05,
+      "rms_128_vs_256": 1.1197507178752854e-05,
+      "rms_signal": 0.03418332444005127
+    },
+    "shifted_allen_cahn/periodic/low_frequency": {
+      "rms_64_vs_256": 9.696678213016087e-05,
+      "rms_128_vs_256": 1.93191395747175e-05,
+      "rms_signal": 0.05853711391456307
+    },
+    "shifted_allen_cahn/periodic/patch_mixture": {
+      "rms_64_vs_256": 3.56275460743033e-05,
+      "rms_128_vs_256": 7.113108463111062e-06,
+      "rms_signal": 0.028421369931573726
+    },
+    "shifted_allen_cahn/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 5.610587028217464e-05,
+      "rms_128_vs_256": 1.1197409087481314e-05,
+      "rms_signal": 0.034183072586899156
+    },
+    "shifted_allen_cahn/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 9.69782720844456e-05,
+      "rms_128_vs_256": 1.9321446751453262e-05,
+      "rms_signal": 0.058535718655131116
+    },
+    "shifted_allen_cahn/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 3.5628106332319264e-05,
+      "rms_128_vs_256": 7.113219869868443e-06,
+      "rms_signal": 0.02842114163298242
+    },
+    "shifted_allen_cahn/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 5.610575736465397e-05,
+      "rms_128_vs_256": 1.1197387702604743e-05,
+      "rms_signal": 0.03418339959685019
+    },
+    "shifted_allen_cahn/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 9.696623895034227e-05,
+      "rms_128_vs_256": 1.931902989281626e-05,
+      "rms_signal": 0.05853715971242461
+    },
+    "shifted_allen_cahn/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 3.56265946126357e-05,
+      "rms_128_vs_256": 7.112917202266922e-06,
+      "rms_signal": 0.028421439625016493
+    },
+    "gray_scott/periodic/single_gaussian": {
+      "rms_64_vs_256": 6.681256385387708e-05,
+      "rms_128_vs_256": 1.3337020163925555e-05,
+      "rms_signal": 0.0524916589462164
+    },
+    "gray_scott/periodic/low_frequency": {
+      "rms_64_vs_256": 9.76475834700721e-05,
+      "rms_128_vs_256": 1.9466442081730828e-05,
+      "rms_signal": 0.08427077365286616
+    },
+    "gray_scott/periodic/patch_mixture": {
+      "rms_64_vs_256": 4.731579030424746e-05,
+      "rms_128_vs_256": 9.447761730789731e-06,
+      "rms_signal": 0.047153847846156866
+    },
+    "gray_scott/dirichlet_zero/single_gaussian": {
+      "rms_64_vs_256": 7.60688678661681e-05,
+      "rms_128_vs_256": 1.5201982789765333e-05,
+      "rms_signal": 0.05137767863587589
+    },
+    "gray_scott/dirichlet_zero/low_frequency": {
+      "rms_64_vs_256": 0.00010358804088174193,
+      "rms_128_vs_256": 2.066526240160367e-05,
+      "rms_signal": 0.08342503126518709
+    },
+    "gray_scott/dirichlet_zero/patch_mixture": {
+      "rms_64_vs_256": 5.95913291007237e-05,
+      "rms_128_vs_256": 1.1919560569892656e-05,
+      "rms_signal": 0.045916774174779164
+    },
+    "gray_scott/neumann_zero/single_gaussian": {
+      "rms_64_vs_256": 6.679467999424419e-05,
+      "rms_128_vs_256": 1.333341819569988e-05,
+      "rms_signal": 0.052492815613628056
+    },
+    "gray_scott/neumann_zero/low_frequency": {
+      "rms_64_vs_256": 9.764315729914062e-05,
+      "rms_128_vs_256": 1.946554669363973e-05,
+      "rms_signal": 0.08427133943181382
+    },
+    "gray_scott/neumann_zero/patch_mixture": {
+      "rms_64_vs_256": 4.730451358058735e-05,
+      "rms_128_vs_256": 9.445494193319273e-06,
+      "rms_signal": 0.04715487202367005
+    }
+  },
+  "spatial_refinement_worst_rms_64_vs_256": 0.00039784548114614964,
+  "spatial_refinement_median_rms_64_vs_256": 8.315869932165015e-05,
+  "passed": true
+}

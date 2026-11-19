@@ -1,0 +1,41 @@
+\section{Results}
+\label{sec:results}
+\input{sections/generated/tab_main}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figures/fig_matrices.pdf}
+\caption{Similarity between the 18 problems of the oscillation family (samples 0--9). Rows and columns are grouped by equation, with the periodic, Dirichlet, and Neumann versions inside each block. Brighter means more similar; the diagonal is left blank, and each panel has its own color scale. $\rho_s$ is the Spearman correlation with $-D$ for this family. Every model sees that the three BC versions of an equation are nearly the same. The image embeddings also recover much of the structure between equations; the text embedding recovers less of it.}
+\label{fig:matrices}
+\end{figure*}
+
+\subsection{Main Results}
+\paragraph{Images work best, but not better than pixels.}
+With images, the three models reach Spearman correlations of \spImageMin--\spImageMax{} with the reference and triplet accuracies of \trImageMin--\trImageMax{} (\cref{tab:main,tab:secondary,fig:matrices}). That is real agreement. But every model falls short of simply comparing the pixels (\spPix{}), and lands close to the physical cosine (\spPhys{}), which ignores how strong a response is. For Qwen3-VL and GME, the image similarities actually follow the physical cosine more closely (Spearman \spQwImagePhys{} and \spGmeImagePhys{}) than they follow the reference. EmbeddingGemma 2 does not show this pattern (\spGemImagePhys{}). On this benchmark, the pretrained image features add nothing to the ranking that the pixels do not already contain, and they partly lose the size of the response.
+
+\paragraph{Text descriptions agree only weakly.}
+With text, the correlations are \spTextMin--\spTextMax{}. Qwen3-VL (\spQwText{}) and GME (\spGmeText{}) beat character TF--IDF (\spTfidf{}) by a small margin, and EmbeddingGemma 2 (\spGemText{}) does worse than it. All three models give the highest similarity to descriptions that share an equation (\cref{tab:factors}), which matches the reference. They do much worse at ordering different equations. On pairs with the same BC, where only the equation changes, the correlations are \spQwTextSame{}, \spGmeTextSame{}, and \spGemTextSame{}. In other words, the text embeddings recognize when two problems use the same equation, but they say little about how far apart the solutions of two different equations will end up.
+
+\paragraph{Adding the image to the text helps little.}
+With both inputs, the correlations are \spBothMin--\spBothMax{}. Each model stays close to its text-only score and far below its image-only score. Only GME improves noticeably over text alone (\spGmeBoth{} against \spGmeText{}). In every model, the description uses more tokens than the image (\cref{tab:model-inputs}). The mismatch control below shows that the models weigh the two inputs differently.
+
+\paragraph{Other references.}
+The image results hold up against the 100-frame reference (\spQwImageHund{}, \spGmeImageHund{}, and \spGemImageHund{} for Qwen3-VL, GME, and EmbeddingGemma 2) and across all 54 problems, where differences in the initial data also enter (\spQwImageFull{}, \spGmeImageFull{}, \spGemImageFull{}). Across all 54 problems, the text embeddings (\spQwTextFull{}, \spGmeTextFull{}, \spGemTextFull{}) fall far behind character TF--IDF (\spTfidfFull{}), which picks up the different IC formulas. Since every triplet is reliable, accuracy on reliable triplets equals overall accuracy, and triplets made only of linear equations show the same pattern (\cref{tab:secondary}).
+
+\subsection{Controls}
+\Cref{tab:controls} summarizes the controls. Encoding the same initial-frame image twice gave bit-identical embeddings in every model, so that control indeed has constant scores.
+
+\paragraph{Time order.}
+Reversing the snapshots hardly changes how well the image similarities match the reference (samples 0--2, original/reversed: \revOrigQw{}/\revRevQw{}, \revOrigGme{}/\revRevGme{}, and \revOrigGem{}/\revRevGem{} for Qwen3-VL, GME, and EmbeddingGemma 2). This is expected, since the reference does not depend on frame order. Yet the reversal moves each image embedding a long way. For Qwen3-VL and GME, an image and its reversed copy are about as similar (\revSelfQw{} and \revSelfGme{}) as the two least similar problems in an IC family (\rangeLoQwImage{} and \rangeLoGmeImage{}). For EmbeddingGemma 2 the value (\revSelfGem{}) lies inside that range. The models notice the layout, but nothing suggests that they use the direction of time.
+
+\paragraph{Notation.}
+Rewriting a description in equivalent notation changes its embedding a great deal. On average, an original description is more similar to its nearest \emph{different} problem (\notOtherQw{}, \notOtherGme{}, and \notOtherGem{} for Qwen3-VL, GME, and EmbeddingGemma 2) than to its own rewrite (\notSelfQw{}, \notSelfGme{}, and \notSelfGem{}). For GME and EmbeddingGemma 2 the effect is extreme: for \notAllGme{} and \notAllGem{} of descriptions, all 53 other problems, including those with different equations and different initial data, are closer to the original than its rewrite is. For Qwen3-VL, a median of \notCloserQw{} of the 53 are closer. Seen from the other side, a rewrite still finds its own original among the 54 descriptions of its sample in \notTopQw{}, \notTopGme{}, and \notTopGem{} of cases. The rewrite moves the embedding to a new region, not onto another problem. The rewritten descriptions match the reference no better than the originals (Spearman \notSpQw{}, \notSpGme{}, and \notSpGem{}, against \notSpOrigQw{}, \notSpOrigGme{}, and \notSpOrigGem{} on the same samples).
+
+\paragraph{Mismatched inputs.}
+When the image and the description disagree, Qwen3-VL follows the description: its joint similarities match the reference of the described problem (\misDeckQw{}) rather than the problem shown (\misImgQw{}). GME weighs the two about equally (\misDeckGme{} and \misImgGme{}), and EmbeddingGemma 2 leans toward the image (\misDeckGem{} and \misImgGem{}), even though its matched joint input does no better than text alone. So the image does reach the joint embedding, but in no model does it lift the joint score close to the image-only score.
+
+\paragraph{Changing one coefficient.}
+In the heat-equation test, where the four descriptions differ only in the diffusion coefficient, Qwen3-VL and EmbeddingGemma 2 rank the candidates in the correct order, $S(0.01,0.011)>S(0.01,0.02)>S(0.01,0.05)$. GME reverses it (similarities \heatValsGme{}).
+
+\input{sections/generated/tab_secondary}
+\input{sections/generated/tab_controls}

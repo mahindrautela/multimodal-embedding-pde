@@ -1,0 +1,10 @@
+{
+  "pages": 15,
+  "main_text_ends_page": 8,
+  "conclusion_page": 7,
+  "overfull_or_undefined_or_missing_glyph_lines": [],
+  "author_error_marker": false,
+  "unresolved_reference_markers": false,
+  "template_styles_unchanged": true,
+  "pdf_sha256": "1fd63040a61352791386cf54e36f7624935d860b946ca95d7efc352c5b7d8ead"
+}

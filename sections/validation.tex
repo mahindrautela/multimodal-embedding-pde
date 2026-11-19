@@ -1,0 +1,20 @@
+\section{Solver Checks, Pilot, and Fixed Protocol}
+\label{app:validation}
+\subsection{Solver Checks}
+All checks used pilot samples (index 100 or higher) or constructed test fields. No test sample was simulated before the protocol was fixed. The transform-based Laplacians match the five-point stencils to a relative error below $5\times10^{-16}$ for all three BCs, and the centered differences match the corresponding matrices exactly. We also checked the exact linear solutions themselves against full $2n^2\times2n^2$ matrix exponentials on an $8\times8$ grid; they agree to $3.4\times10^{-15}$.
+
+\Cref{tab:validation} summarizes the rest. Diffusion is solved exactly in the transform basis, so its only error is rounding. For advection--diffusion and linear exchange, the error against the exact grid solution falls by a factor of about 16 each time the step is halved, as expected for a fourth-order method. The continuous test solutions for diffusion and exchange show spatial convergence orders between \valOrderMin{} and \valOrderMax{} for every BC. For every equation, the difference from the $256\times256$ solution is 5.0 times larger at $64\times64$ than at $128\times128$, which is the ratio expected for second-order convergence.
+
+\input{sections/generated/tab_validation}
+
+\paragraph{Independent periodic check.}
+For periodic BCs we ran Exponax \citep{exponax_docs} (version 0.2.1, float64) on diffusion, advection--diffusion, Fisher--KPP, Allen--Cahn, and Gray--Scott, from the same pilot fields. For Allen--Cahn we used the substitution $w=2u-1$, which turns our shifted cubic into $w_t=\nu\Delta w+\tfrac a4(w-w^3)$. Exponax is a spectral method and is very accurate in space for these smooth fields, so the difference between the two solvers measures our finite-difference error. Refining from $n=64$ to $n=128$ shrinks this difference by a median factor of \expoRatio{}, consistent with second order, and the largest difference at $64\times64$ is \expoMax{}. Exponax has no linear-exchange solver; for that equation the exact grid solution serves instead.
+
+\subsection{Pilot}
+\label{app:pilot}
+The pilot (\texttt{scripts/pilot.py}, samples 100--119) evaluated the criteria listed in \cref{sec:benchmark}. All passed, and the coefficients were not changed. The largest values at the five observed times were \pilotMaxU{} for $u$ and \pilotMaxV{} for $v$, which set the image color range to $[0,0.8]$ for both fields. On samples 100--104, the distance matrices computed on the $64\times64$ and $128\times128$ grids had Spearman correlations of at least \pilotSpearmanMin{}, and only \pilotFlips{} of \pilotTriplets{} triplets changed order. Grid resolution therefore has almost no effect on the reference rankings.
+
+\subsection{Fixed Protocol and Run Record}
+After the pilot, and before any test sample was simulated or encoded, we wrote \texttt{benchmark/frozen\_protocol.json}. It fixes the coefficients, solver settings, image rendering, model versions and input formats, the ten-sample subset, the controls, the error test, the baselines, and the definitions of all scores. It also stores SHA-256 hashes of the scripts that existed at that point. The analysis, table, and figure scripts were written afterwards but before any embedding output was looked at, and they follow the fixed definitions. The Exponax check and the recorded check of the exact linear solutions were also added later; they use only pilot or synthetic data. A \texttt{--float32} option for the planned precision check was added to the embedding script without changing its default behavior.
+
+The main simulation took \simSeconds{} minutes on two CPU cores. No trajectory failed, and no value was clipped or changed. Stored values lie in $[\simMin,\ \simMax]$. The \simOOR{} image pixels outside the color range are all tiny negative rounding errors, which the colormap shows as zero. The run record stores a SHA-256 hash of every stored array and of every full 100-frame trajectory. The full trajectories (17.7\,GB) are not kept, but they can be regenerated exactly and checked against these hashes.

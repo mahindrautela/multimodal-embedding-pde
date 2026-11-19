@@ -1,0 +1,55 @@
+\section{The Benchmark}
+\label{sec:benchmark}
+\subsection{Six Equations}
+All six equations act on the same pair of dimensionless fields, $\U=(u,v)^\top$, on the unit square $\Omega=[0,1]^2$. Each has diffusion plus one extra term:
+\begin{equation}
+ \partial_t\U=\D\Delta\U+G(\U,\nabla\U),
+ \qquad \D=\operatorname{diag}(\nu_u,\nu_v).
+\label{eq:common-pde}
+\end{equation}
+\Cref{tab:equations} lists the six choices of $G$. In four equations the two fields evolve independently; in linear exchange and Gray--Scott they interact. Because every equation uses the same two fields, any two problems can be compared directly, without padding missing fields or matching unrelated physical quantities.
+
+\begin{table*}[t]
+\centering
+\caption{The six equations. All have the form $\partial_t\U=\D\Delta\U+G$ on the same square. Products and powers act pointwise. They are six small parabolic models, not a survey of PDE types.}
+\label{tab:equations}
+\small
+\begin{tabular}{p{0.22\textwidth}p{0.48\textwidth}p{0.22\textwidth}}
+\toprule
+Equation & Extra term $G$ & Behavior \\
+\midrule
+Diffusion & $(0,0)^\top$ & Smoothing; linear reference \\
+Advection--diffusion & $-c_x\partial_x\U-c_y\partial_y\U$ & Transport and smoothing \\
+Linear exchange & $\kappa(v-u,\ u-v)^\top$ & Coupling; linear reference \\
+Fisher--KPP & $r\big(u(1-u),\ v(1-v)\big)^\top$ & Logistic growth \\
+Allen--Cahn (shifted) & $a\big(u(1-u)(u-\tfrac12),\ v(1-v)(v-\tfrac12)\big)^\top$ & Two stable states \\
+Gray--Scott & $\big(-uv^2+F(1-u),\ uv^2-(F+k)v\big)^\top$ & Nonlinear coupling \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+We use one coefficient setting per equation: $\nu_u=0.01$, $\nu_v=0.005$, $c=(0.25,0.10)$, $\kappa=0.5$, $r=1$, $a=4$, $F=0.04$, and $k=0.06$. Before the main run, a small pilot on samples that are not part of the test set (indices 100--119) checked these values against criteria written down beforehand (\cref{app:pilot}). Every solution changes visibly: the smallest average relative change from $t=0$ to $t=1$ is 0.37. Every equation separates from pure diffusion by much more than the time-stepping error (at least $5.3\times10^{-3}$ in RMS, against about $2\times10^{-10}$). The Allen--Cahn initial fields fall on both sides of its threshold $\tfrac12$ (19 of 120 pilot fields peak above it). All checks passed, so the coefficients were kept. No embedding model was used in the pilot. With one setting per equation, the results say nothing about an entire PDE family.
+
+\subsection{Initial and Boundary Conditions}
+The three IC families are a single smooth bump, low-frequency oscillations, and a mix of three smooth patches. Each field draws its own random parameters. Every IC is multiplied by the same smooth window
+\begin{equation}
+ w(x,y)=\eta(x)\eta(y),\qquad
+ \eta(s)=\exp\!\left(4-\frac{1}{s(1-s)}\right)
+\label{eq:window}
+\end{equation}
+for $0<s<1$, with $\eta(0)=\eta(1)=0$. The window makes the initial values and all their derivatives vanish at the boundary. The same initial field is therefore valid for all three BCs, and changing the BC never changes the starting pattern. (This covers the initial data only; we assume no extra compatibility at the corners.)
+
+The BCs are periodic in both directions, zero Dirichlet ($\U=0$ on $\partial\Omega$), and zero Neumann ($\partial_n\U=0$). For advection--diffusion, the Neumann condition sets the normal gradient to zero, not the total flux. Every equation keeps some diffusion, so pure transport, which would need different boundary data, never appears.
+
+Within an IC family, the same 100 initial arrays are used for all six equations and all three BCs. Different families are linked through a shared random seed, so comparisons across families also include the change in initial data. Initial values lie in $[0,0.8]$. We do not assume that solutions stay in this range, and no field is ever clipped.
+
+\subsection{Simulation}
+\label{sec:simulator}
+The benchmark has $6\times3\times3=54$ problems and 5,400 trajectories. Each trajectory stores 100 states, including the initial one, at times $t_n=n/99$ for $n=0,\ldots,99$, so the time horizon is $T=1$. The full float32 array has shape $[54,\ 100,\ 100,\ 2,\ 64,\ 64]$ (problem, sample, time, field, and the two space directions) and takes about 17.7\,GB.
+
+APEBench and its Exponax solvers use Fourier methods on periodic domains \citep{koehler2024apebench,apebench_docs,exponax_docs}. Because we also need Dirichlet and Neumann BCs, we wrote one small finite-difference solver for all 54 problems. It uses the five-point Laplacian on a $64\times64$ cell-centered grid, with ghost values that wrap around (periodic), flip sign (Dirichlet), or copy the neighbor (Neumann). For each BC this matrix is diagonalized exactly by a fast transform: the real FFT, the DST-II, or the DCT-II. Diffusion is therefore solved exactly in that basis. Advection uses centered differences with the same ghost values; the exchange and reaction terms act pointwise. Time stepping uses ETDRK4 \citep{cox2002etd,kassam2005etdrk4} with four steps per output interval ($\delta t=1/396$), computed in float64 and stored in float32.
+
+We tested the solver before the main run (\cref{app:validation}). For the three linear equations, its output matches the exact solution of the same grid equations to within $2.3\times10^{-10}$. For the nonlinear equations, using four times as many steps changes no value by more than $5\times10^{-12}$, and the error shrinks at the expected fourth-order rate. In space the solver converges at second order for every BC, and the five-frame RMS difference between the $64\times64$ and $256\times256$ grids is at most $4.0\times10^{-4}$ (median $8\times10^{-5}$). An independent periodic solver, Exponax, gives the same picture. Our reference is the solution on the $64\times64$ grid; the finer grids only show how close that solution is to the continuous PDE.
+
+\subsection{Text Descriptions}
+Each sample of each problem has a plain-text description written in LaTeX. It gives the two equations with their coefficients, the explicit initial fields with their sampled parameters, the BC, the domain, and the observation times. A random seed alone would not tell a model what the initial field is, so the description states the actual formula. Headings are generic, such as ``Equation'' and ``Boundary''. The description never names the equation, the problem, or the solver; this information is kept in a separate record. A generator script produces all 5,400 descriptions.

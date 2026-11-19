@@ -1,0 +1,720 @@
+{
+"model": {
+"key": "embeddinggemma2",
+"checkpoint": "google/embeddinggemma-2",
+"revision": "f9972ac22e696a105c482202646979e33e4b5a1e",
+"interface": "sentence-transformers",
+"text_prefix": "task: sentence similarity | query: ",
+"image_prefix": null,
+"combined_format": "task: sentence similarity | query: {deck}\n<|image|>",
+"pooling": "checkpoint modules (mean pooling), then float32 L2 normalization",
+"dtype": "float32",
+"audio_encoder_loaded": false
+},
+"failures": {},
+"records": {
+"main|text|diffusion__single_gaussian__periodic|r000": {
+"seconds": 0.801,
+"tokens": 508,
+"text_sha256": "d7a612f1ad5a47cf"
+},
+"main|image|diffusion__single_gaussian__periodic|r000": {
+"seconds": 5.09,
+"tokens": 280
+},
+"main|both|diffusion__single_gaussian__periodic|r000": {
+"seconds": 5.914,
+"tokens": 788,
+"text_sha256": "d7a612f1ad5a47cf"
+},
+"main|text|diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.654,
+"tokens": 454,
+"text_sha256": "7b0cd98a4eee606b"
+},
+"main|image|diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 4.959
+},
+"main|both|diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.865,
+"tokens": 734,
+"text_sha256": "7b0cd98a4eee606b"
+},
+"main|text|diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 0.664,
+"tokens": 460,
+"text_sha256": "e8e53f86d94c7eae"
+},
+"main|image|diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 5.138
+},
+"main|both|diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 5.988,
+"tokens": 740,
+"text_sha256": "e8e53f86d94c7eae"
+},
+"main|text|diffusion__low_frequency__periodic|r000": {
+"seconds": 0.755,
+"tokens": 510,
+"text_sha256": "c7f2f4af6ada8dcb"
+},
+"main|image|diffusion__low_frequency__periodic|r000": {
+"seconds": 5.035
+},
+"main|both|diffusion__low_frequency__periodic|r000": {
+"seconds": 5.99,
+"tokens": 790,
+"text_sha256": "c7f2f4af6ada8dcb"
+},
+"main|text|diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.66,
+"tokens": 456,
+"text_sha256": "e73eb7d6872c86da"
+},
+"main|image|diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.034
+},
+"main|both|diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.686,
+"tokens": 736,
+"text_sha256": "e73eb7d6872c86da"
+},
+"main|text|diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 0.709,
+"tokens": 462,
+"text_sha256": "52cab5cdc48cd98e"
+},
+"main|image|diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 5.069
+},
+"main|both|diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 5.861,
+"tokens": 742,
+"text_sha256": "52cab5cdc48cd98e"
+},
+"main|text|diffusion__patch_mixture__periodic|r000": {
+"seconds": 1.463,
+"tokens": 856,
+"text_sha256": "d3343ec715d08bc8"
+},
+"main|image|diffusion__patch_mixture__periodic|r000": {
+"seconds": 5.054
+},
+"main|both|diffusion__patch_mixture__periodic|r000": {
+"seconds": 6.666,
+"tokens": 1136,
+"text_sha256": "d3343ec715d08bc8"
+},
+"main|text|diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.236,
+"tokens": 802,
+"text_sha256": "2194bd94b60e89e2"
+},
+"main|image|diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 4.954
+},
+"main|both|diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.398,
+"tokens": 1082,
+"text_sha256": "2194bd94b60e89e2"
+},
+"main|text|diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 1.345,
+"tokens": 808,
+"text_sha256": "d96e21c0cfae6481"
+},
+"main|image|diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 5.37
+},
+"main|both|diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 6.378,
+"tokens": 1088,
+"text_sha256": "d96e21c0cfae6481"
+},
+"main|text|advection_diffusion__single_gaussian__periodic|r000": {
+"seconds": 0.945,
+"tokens": 573,
+"text_sha256": "edbae963868bbea5"
+},
+"main|image|advection_diffusion__single_gaussian__periodic|r000": {
+"seconds": 5.12
+},
+"main|both|advection_diffusion__single_gaussian__periodic|r000": {
+"seconds": 6.303,
+"tokens": 853,
+"text_sha256": "edbae963868bbea5"
+},
+"main|text|advection_diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.807,
+"tokens": 519,
+"text_sha256": "3e19131cf28e7f58"
+},
+"main|image|advection_diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 4.999
+},
+"main|both|advection_diffusion__single_gaussian__dirichlet_zero|r000": {
+"seconds": 6.176,
+"tokens": 799,
+"text_sha256": "3e19131cf28e7f58"
+},
+"main|text|advection_diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 0.808,
+"tokens": 525,
+"text_sha256": "27667a94ce3897d4"
+},
+"main|image|advection_diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 5.108
+},
+"main|both|advection_diffusion__single_gaussian__neumann_zero|r000": {
+"seconds": 5.823,
+"tokens": 805,
+"text_sha256": "27667a94ce3897d4"
+},
+"main|text|advection_diffusion__low_frequency__periodic|r000": {
+"seconds": 0.991,
+"tokens": 575,
+"text_sha256": "74a0bbc7bf67a101"
+},
+"main|image|advection_diffusion__low_frequency__periodic|r000": {
+"seconds": 5.158
+},
+"main|both|advection_diffusion__low_frequency__periodic|r000": {
+"seconds": 6.118,
+"tokens": 855,
+"text_sha256": "74a0bbc7bf67a101"
+},
+"main|text|advection_diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.781,
+"tokens": 521,
+"text_sha256": "344c292382cf5687"
+},
+"main|image|advection_diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.332
+},
+"main|both|advection_diffusion__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.959,
+"tokens": 801,
+"text_sha256": "344c292382cf5687"
+},
+"main|text|advection_diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 0.796,
+"tokens": 527,
+"text_sha256": "dc8443f611a223d5"
+},
+"main|image|advection_diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 5.421
+},
+"main|both|advection_diffusion__low_frequency__neumann_zero|r000": {
+"seconds": 6.101,
+"tokens": 807,
+"text_sha256": "dc8443f611a223d5"
+},
+"main|text|advection_diffusion__patch_mixture__periodic|r000": {
+"seconds": 1.534,
+"tokens": 921,
+"text_sha256": "d913cf39b78e2a42"
+},
+"main|image|advection_diffusion__patch_mixture__periodic|r000": {
+"seconds": 5.448
+},
+"main|both|advection_diffusion__patch_mixture__periodic|r000": {
+"seconds": 7.09,
+"tokens": 1201,
+"text_sha256": "d913cf39b78e2a42"
+},
+"main|text|advection_diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.529,
+"tokens": 867,
+"text_sha256": "bdec364599703e1c"
+},
+"main|image|advection_diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 5.239
+},
+"main|both|advection_diffusion__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.824,
+"tokens": 1147,
+"text_sha256": "bdec364599703e1c"
+},
+"main|text|advection_diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 1.573,
+"tokens": 873,
+"text_sha256": "1e15352267e22de4"
+},
+"main|image|advection_diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 5.164
+},
+"main|both|advection_diffusion__patch_mixture__neumann_zero|r000": {
+"seconds": 6.825,
+"tokens": 1153,
+"text_sha256": "1e15352267e22de4"
+},
+"main|text|linear_exchange__single_gaussian__periodic|r000": {
+"seconds": 0.826,
+"tokens": 535,
+"text_sha256": "892eef9e71646229"
+},
+"main|image|linear_exchange__single_gaussian__periodic|r000": {
+"seconds": 5.182
+},
+"main|both|linear_exchange__single_gaussian__periodic|r000": {
+"seconds": 5.883,
+"tokens": 815,
+"text_sha256": "892eef9e71646229"
+},
+"main|text|linear_exchange__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.723,
+"tokens": 481,
+"text_sha256": "5cf24429419bdbd0"
+},
+"main|image|linear_exchange__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.109
+},
+"main|both|linear_exchange__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.778,
+"tokens": 761,
+"text_sha256": "5cf24429419bdbd0"
+},
+"main|text|linear_exchange__single_gaussian__neumann_zero|r000": {
+"seconds": 0.722,
+"tokens": 487,
+"text_sha256": "72212dbf36e08fe7"
+},
+"main|image|linear_exchange__single_gaussian__neumann_zero|r000": {
+"seconds": 5.418
+},
+"main|both|linear_exchange__single_gaussian__neumann_zero|r000": {
+"seconds": 5.7,
+"tokens": 767,
+"text_sha256": "72212dbf36e08fe7"
+},
+"main|text|linear_exchange__low_frequency__periodic|r000": {
+"seconds": 0.787,
+"tokens": 537,
+"text_sha256": "7584b6d7c81a2130"
+},
+"main|image|linear_exchange__low_frequency__periodic|r000": {
+"seconds": 5.352
+},
+"main|both|linear_exchange__low_frequency__periodic|r000": {
+"seconds": 5.9,
+"tokens": 817,
+"text_sha256": "7584b6d7c81a2130"
+},
+"main|text|linear_exchange__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.707,
+"tokens": 483,
+"text_sha256": "521b1b00a6f8489f"
+},
+"main|image|linear_exchange__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.185
+},
+"main|both|linear_exchange__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.978,
+"tokens": 763,
+"text_sha256": "521b1b00a6f8489f"
+},
+"main|text|linear_exchange__low_frequency__neumann_zero|r000": {
+"seconds": 0.774,
+"tokens": 489,
+"text_sha256": "f609621d64e130d2"
+},
+"main|image|linear_exchange__low_frequency__neumann_zero|r000": {
+"seconds": 5.118
+},
+"main|both|linear_exchange__low_frequency__neumann_zero|r000": {
+"seconds": 5.954,
+"tokens": 769,
+"text_sha256": "f609621d64e130d2"
+},
+"main|text|linear_exchange__patch_mixture__periodic|r000": {
+"seconds": 1.355,
+"tokens": 883,
+"text_sha256": "ca6cfbbb7561b594"
+},
+"main|image|linear_exchange__patch_mixture__periodic|r000": {
+"seconds": 5.134
+},
+"main|both|linear_exchange__patch_mixture__periodic|r000": {
+"seconds": 6.631,
+"tokens": 1163,
+"text_sha256": "ca6cfbbb7561b594"
+},
+"main|text|linear_exchange__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.324,
+"tokens": 829,
+"text_sha256": "fda6f62b208d3750"
+},
+"main|image|linear_exchange__patch_mixture__dirichlet_zero|r000": {
+"seconds": 5.013
+},
+"main|both|linear_exchange__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.518,
+"tokens": 1109,
+"text_sha256": "fda6f62b208d3750"
+},
+"main|text|linear_exchange__patch_mixture__neumann_zero|r000": {
+"seconds": 1.278,
+"tokens": 835,
+"text_sha256": "9080cd63096c76a7"
+},
+"main|image|linear_exchange__patch_mixture__neumann_zero|r000": {
+"seconds": 4.972
+},
+"main|both|linear_exchange__patch_mixture__neumann_zero|r000": {
+"seconds": 7.03,
+"tokens": 1115,
+"text_sha256": "9080cd63096c76a7"
+},
+"main|text|fisher_kpp__single_gaussian__periodic|r000": {
+"seconds": 0.832,
+"tokens": 538,
+"text_sha256": "01ab209440d100d3"
+},
+"main|image|fisher_kpp__single_gaussian__periodic|r000": {
+"seconds": 5.255
+},
+"main|both|fisher_kpp__single_gaussian__periodic|r000": {
+"seconds": 5.929,
+"tokens": 818,
+"text_sha256": "01ab209440d100d3"
+},
+"main|text|fisher_kpp__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.727,
+"tokens": 484,
+"text_sha256": "9121a546f51e3353"
+},
+"main|image|fisher_kpp__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.377
+},
+"main|both|fisher_kpp__single_gaussian__dirichlet_zero|r000": {
+"seconds": 6.652,
+"tokens": 764,
+"text_sha256": "9121a546f51e3353"
+},
+"main|text|fisher_kpp__single_gaussian__neumann_zero|r000": {
+"seconds": 0.827,
+"tokens": 490,
+"text_sha256": "6a2ba39cbefaf466"
+},
+"main|image|fisher_kpp__single_gaussian__neumann_zero|r000": {
+"seconds": 5.329
+},
+"main|both|fisher_kpp__single_gaussian__neumann_zero|r000": {
+"seconds": 6.334,
+"tokens": 770,
+"text_sha256": "6a2ba39cbefaf466"
+},
+"main|text|fisher_kpp__low_frequency__periodic|r000": {
+"seconds": 0.831,
+"tokens": 540,
+"text_sha256": "f5249aa7d0847a3e"
+},
+"main|image|fisher_kpp__low_frequency__periodic|r000": {
+"seconds": 5.316
+},
+"main|both|fisher_kpp__low_frequency__periodic|r000": {
+"seconds": 6.289,
+"tokens": 820,
+"text_sha256": "f5249aa7d0847a3e"
+},
+"main|text|fisher_kpp__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.812,
+"tokens": 486,
+"text_sha256": "4b21d2aef0fe3953"
+},
+"main|image|fisher_kpp__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.492
+},
+"main|both|fisher_kpp__low_frequency__dirichlet_zero|r000": {
+"seconds": 6.226,
+"tokens": 766,
+"text_sha256": "4b21d2aef0fe3953"
+},
+"main|text|fisher_kpp__low_frequency__neumann_zero|r000": {
+"seconds": 0.797,
+"tokens": 492,
+"text_sha256": "929a273bd2b13c90"
+},
+"main|image|fisher_kpp__low_frequency__neumann_zero|r000": {
+"seconds": 5.335
+},
+"main|both|fisher_kpp__low_frequency__neumann_zero|r000": {
+"seconds": 6.215,
+"tokens": 772,
+"text_sha256": "929a273bd2b13c90"
+},
+"main|text|fisher_kpp__patch_mixture__periodic|r000": {
+"seconds": 1.597,
+"tokens": 886,
+"text_sha256": "fcd5ee259e58f81a"
+},
+"main|image|fisher_kpp__patch_mixture__periodic|r000": {
+"seconds": 5.78
+},
+"main|both|fisher_kpp__patch_mixture__periodic|r000": {
+"seconds": 6.677,
+"tokens": 1166,
+"text_sha256": "fcd5ee259e58f81a"
+},
+"main|text|fisher_kpp__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.575,
+"tokens": 832,
+"text_sha256": "87229eb463434358"
+},
+"main|image|fisher_kpp__patch_mixture__dirichlet_zero|r000": {
+"seconds": 5.397
+},
+"main|both|fisher_kpp__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.857,
+"tokens": 1112,
+"text_sha256": "87229eb463434358"
+},
+"main|text|fisher_kpp__patch_mixture__neumann_zero|r000": {
+"seconds": 1.309,
+"tokens": 838,
+"text_sha256": "19c2a0de566ccf32"
+},
+"main|image|fisher_kpp__patch_mixture__neumann_zero|r000": {
+"seconds": 5.199
+},
+"main|both|fisher_kpp__patch_mixture__neumann_zero|r000": {
+"seconds": 6.725,
+"tokens": 1118,
+"text_sha256": "19c2a0de566ccf32"
+},
+"main|text|shifted_allen_cahn__single_gaussian__periodic|r000": {
+"seconds": 0.898,
+"tokens": 550,
+"text_sha256": "30cbe9d81d378674"
+},
+"main|image|shifted_allen_cahn__single_gaussian__periodic|r000": {
+"seconds": 5.525
+},
+"main|both|shifted_allen_cahn__single_gaussian__periodic|r000": {
+"seconds": 6.109,
+"tokens": 830,
+"text_sha256": "30cbe9d81d378674"
+},
+"main|text|shifted_allen_cahn__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.741,
+"tokens": 496,
+"text_sha256": "928655a5093d0ad5"
+},
+"main|image|shifted_allen_cahn__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.422
+},
+"main|both|shifted_allen_cahn__single_gaussian__dirichlet_zero|r000": {
+"seconds": 6.341,
+"tokens": 776,
+"text_sha256": "928655a5093d0ad5"
+},
+"main|text|shifted_allen_cahn__single_gaussian__neumann_zero|r000": {
+"seconds": 0.76,
+"tokens": 502,
+"text_sha256": "b0bb173febcab426"
+},
+"main|image|shifted_allen_cahn__single_gaussian__neumann_zero|r000": {
+"seconds": 5.482
+},
+"main|both|shifted_allen_cahn__single_gaussian__neumann_zero|r000": {
+"seconds": 6.02,
+"tokens": 782,
+"text_sha256": "b0bb173febcab426"
+},
+"main|text|shifted_allen_cahn__low_frequency__periodic|r000": {
+"seconds": 0.942,
+"tokens": 552,
+"text_sha256": "1c6b01e8ba066635"
+},
+"main|image|shifted_allen_cahn__low_frequency__periodic|r000": {
+"seconds": 5.23
+},
+"main|both|shifted_allen_cahn__low_frequency__periodic|r000": {
+"seconds": 5.987,
+"tokens": 832,
+"text_sha256": "1c6b01e8ba066635"
+},
+"main|text|shifted_allen_cahn__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.746,
+"tokens": 498,
+"text_sha256": "e0686cfe558ed491"
+},
+"main|image|shifted_allen_cahn__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.012
+},
+"main|both|shifted_allen_cahn__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.745,
+"tokens": 778,
+"text_sha256": "e0686cfe558ed491"
+},
+"main|text|shifted_allen_cahn__low_frequency__neumann_zero|r000": {
+"seconds": 0.734,
+"tokens": 504,
+"text_sha256": "2e552446f6684b48"
+},
+"main|image|shifted_allen_cahn__low_frequency__neumann_zero|r000": {
+"seconds": 5.271
+},
+"main|both|shifted_allen_cahn__low_frequency__neumann_zero|r000": {
+"seconds": 6.271,
+"tokens": 784,
+"text_sha256": "2e552446f6684b48"
+},
+"main|text|shifted_allen_cahn__patch_mixture__periodic|r000": {
+"seconds": 1.518,
+"tokens": 898,
+"text_sha256": "38e3cb89ff54198c"
+},
+"main|image|shifted_allen_cahn__patch_mixture__periodic|r000": {
+"seconds": 5.471
+},
+"main|both|shifted_allen_cahn__patch_mixture__periodic|r000": {
+"seconds": 7.165,
+"tokens": 1178,
+"text_sha256": "38e3cb89ff54198c"
+},
+"main|text|shifted_allen_cahn__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.413,
+"tokens": 844,
+"text_sha256": "b0666c943f7524d6"
+},
+"main|image|shifted_allen_cahn__patch_mixture__dirichlet_zero|r000": {
+"seconds": 5.344
+},
+"main|both|shifted_allen_cahn__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.987,
+"tokens": 1124,
+"text_sha256": "b0666c943f7524d6"
+},
+"main|text|shifted_allen_cahn__patch_mixture__neumann_zero|r000": {
+"seconds": 1.433,
+"tokens": 850,
+"text_sha256": "9714d78c17d409a2"
+},
+"main|image|shifted_allen_cahn__patch_mixture__neumann_zero|r000": {
+"seconds": 5.538
+},
+"main|both|shifted_allen_cahn__patch_mixture__neumann_zero|r000": {
+"seconds": 6.896,
+"tokens": 1130,
+"text_sha256": "9714d78c17d409a2"
+},
+"main|text|gray_scott__single_gaussian__periodic|r000": {
+"seconds": 0.906,
+"tokens": 558,
+"text_sha256": "d45a926b34ac5a35"
+},
+"main|image|gray_scott__single_gaussian__periodic|r000": {
+"seconds": 5.936
+},
+"main|both|gray_scott__single_gaussian__periodic|r000": {
+"seconds": 6.154,
+"tokens": 838,
+"text_sha256": "d45a926b34ac5a35"
+},
+"main|text|gray_scott__single_gaussian__dirichlet_zero|r000": {
+"seconds": 0.759,
+"tokens": 504,
+"text_sha256": "47566c6ec6b7a659"
+},
+"main|image|gray_scott__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.323
+},
+"main|both|gray_scott__single_gaussian__dirichlet_zero|r000": {
+"seconds": 5.995,
+"tokens": 784,
+"text_sha256": "47566c6ec6b7a659"
+},
+"main|text|gray_scott__single_gaussian__neumann_zero|r000": {
+"seconds": 0.751,
+"tokens": 510,
+"text_sha256": "83ec1db7735e3a05"
+},
+"main|image|gray_scott__single_gaussian__neumann_zero|r000": {
+"seconds": 5.283
+},
+"main|both|gray_scott__single_gaussian__neumann_zero|r000": {
+"seconds": 6.395,
+"tokens": 790,
+"text_sha256": "83ec1db7735e3a05"
+},
+"main|text|gray_scott__low_frequency__periodic|r000": {
+"seconds": 0.849,
+"tokens": 560,
+"text_sha256": "2fc7b9c43d09cb09"
+},
+"main|image|gray_scott__low_frequency__periodic|r000": {
+"seconds": 5.099
+},
+"main|both|gray_scott__low_frequency__periodic|r000": {
+"seconds": 6.199,
+"tokens": 840,
+"text_sha256": "2fc7b9c43d09cb09"
+},
+"main|text|gray_scott__low_frequency__dirichlet_zero|r000": {
+"seconds": 0.741,
+"tokens": 506,
+"text_sha256": "f2b414f719dee08d"
+},
+"main|image|gray_scott__low_frequency__dirichlet_zero|r000": {
+"seconds": 5.298
+},
+"main|both|gray_scott__low_frequency__dirichlet_zero|r000": {
+"seconds": 6.55,
+"tokens": 786,
+"text_sha256": "f2b414f719dee08d"
+},
+"main|text|gray_scott__low_frequency__neumann_zero|r000": {
+"seconds": 0.843,
+"tokens": 512,
+"text_sha256": "35189fb8275baef1"
+},
+"main|image|gray_scott__low_frequency__neumann_zero|r000": {
+"seconds": 5.17
+},
+"main|both|gray_scott__low_frequency__neumann_zero|r000": {
+"seconds": 6.427,
+"tokens": 792,
+"text_sha256": "35189fb8275baef1"
+},
+"main|text|gray_scott__patch_mixture__periodic|r000": {
+"seconds": 1.557,
+"tokens": 906,
+"text_sha256": "eba54f82e20264ec"
+},
+"main|image|gray_scott__patch_mixture__periodic|r000": {
+"seconds": 5.483
+},
+"main|both|gray_scott__patch_mixture__periodic|r000": {
+"seconds": 7.105,
+"tokens": 1186,
+"text_sha256": "eba54f82e20264ec"
+},
+"main|text|gray_scott__patch_mixture__dirichlet_zero|r000": {
+"seconds": 1.417,
+"tokens": 852,
+"text_sha256": "bdb1bd20c79e5e24"
+},
+"main|image|gray_scott__patch_mixture__dirichlet_zero|r000": {
+"seconds": 5.335
+},
+"main|both|gray_scott__patch_mixture__dirichlet_zero|r000": {
+"seconds": 6.74,
+"tokens": 1132,
+"text_sha256": "bdb1bd20c79e5e24"
+},
+"main|text|gray_scott__patch_mixture__neumann_zero|r000": {
+"seconds": 1.402,
+"tokens": 858,
+"text_sha256": "a6a081effeedeb69"
+},
+"main|image|gray_scott__patch_mixture__neumann_zero|r000": {
+"seconds": 5.119
+},
+"main|both|gray_scott__patch_mixture__neumann_zero|r000": {
+"seconds": 6.767,
+"tokens": 1138,
+"text_sha256": "a6a081effeedeb69"
+}
+}
+}

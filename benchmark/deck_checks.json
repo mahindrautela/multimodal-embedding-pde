@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "numpy_version": "2.3.5",
+  "base_seed": 20261118,
+  "configuration_json_decks": 54,
+  "resolved_json_decks_written_this_run": 5400,
+  "resolved_text_decks_written_this_run": 5400,
+  "ic_parameter_records": {
+    "single_gaussian": 100,
+    "low_frequency": 100,
+    "patch_mixture": 100
+  },
+  "initial_arrays_evaluated_for_checks": 300,
+  "initial_array_shape": [
+    2,
+    64,
+    64
+  ],
+  "initial_array_dtype": "float64",
+  "all_arrays_finite_and_between_0_and_0_8": true,
+  "exact_zero_sampled_boundary_values": true,
+  "parameter_and_array_replay_identical": true,
+  "resolved_model_inputs_exclude_provenance_labels": true,
+  "ic_bounds": {
+    "single_gaussian": {
+      "minimum": 9.130663253424761e-145,
+      "maximum": 0.7524307003284134,
+      "example_sha256_float64": "c81617f85ddbeaded6aa5615373d4f3af00ea6ac0e0b6e756a7eae55b71b90b3"
+    },
+    "low_frequency": {
+      "minimum": 2.1950905171550118e-110,
+      "maximum": 0.753145257409038,
+      "example_sha256_float64": "92505c8722e27075086c2b003acfe27ca6daee8bfd6634cb3f7424ba155706f6"
+    },
+    "patch_mixture": {
+      "minimum": 1.253205224331647e-123,
+      "maximum": 0.6501485811803589,
+      "example_sha256_float64": "68f19ae96d75314b35431d0427cdeaf0be5822579c1567cdf07e4f49192ca861"
+    }
+  },
+  "simulations_run": false,
+  "embedding_inference_run": false,
+  "note": "Boundary derivatives vanish by construction; sampled boundary values are a numerical check. Hashes describe this NumPy/platform execution. Existing unrelated files are not deleted."
+}

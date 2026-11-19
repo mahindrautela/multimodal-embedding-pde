@@ -1,0 +1,20 @@
+{
+  "grid": 8,
+  "times": [
+    0.0,
+    0.3,
+    1.0
+  ],
+  "max_abs_difference": {
+    "diffusion/periodic": 8.881784197001252e-16,
+    "diffusion/dirichlet_zero": 6.106226635438361e-16,
+    "diffusion/neumann_zero": 7.216449660063518e-16,
+    "advection_diffusion/periodic": 9.992007221626409e-16,
+    "advection_diffusion/dirichlet_zero": 1.4988010832439613e-15,
+    "advection_diffusion/neumann_zero": 1.3322676295501878e-15,
+    "linear_exchange/periodic": 1.0547118733938987e-15,
+    "linear_exchange/dirichlet_zero": 3.4416913763379853e-15,
+    "linear_exchange/neumann_zero": 1.5161483180037294e-15
+  },
+  "worst": 3.4416913763379853e-15
+}

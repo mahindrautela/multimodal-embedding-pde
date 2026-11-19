@@ -1,0 +1,92 @@
+\section{Mathematical Details}
+\label{app:simple-math}
+All quantities below are defined on a fixed set of paired trajectories, fields, grid points, and observation times. They describe this experiment, not a universal ordering of PDEs.
+
+\subsection{The Trajectory Distance}
+\label{app:trajectory-distance}
+Let $U_i^{(r)}(t_q)\in\mathbb R^{C\times n\times n}$ be sample $r$ of problem $i$ at time $t_q$, with $N=100$ samples, $C=2$ fields, and $n=64$. Choose positive time weights $w_q$ that sum to one. The five-frame distance uses $w_q=1/5$ and the 100-frame distance uses $w_q=1/100$. Define
+\begin{equation}
+ D_{i\ell}^2=\frac{1}{NCn^2}\sum_{r=1}^{N}\sum_{q=1}^{J}w_q
+ \left\|U_i^{(r)}(t_q)-U_\ell^{(r)}(t_q)\right\|_F^2.
+\label{eq:appendix-rms}
+\end{equation}
+Within an IC family, samples with the same index start from the same initial arrays. Across families, the pairing comes from the shared random seed.
+
+\paragraph{Why this is a distance.}
+Flatten one trajectory into
+\[
+ f_i^{(r)}=\left(\sqrt{\frac{w_q}{Cn^2}}\,
+       \operatorname{vec}U_i^{(r)}(t_q)\right)_{q=1}^{J},
+ \qquad F_i=\frac{1}{\sqrt N}\left(f_i^{(1)},\ldots,f_i^{(N)}\right).
+\]
+Then $D_{i\ell}=\|F_i-F_\ell\|_2$, so nonnegativity, symmetry, and the triangle inequality follow from the Euclidean norm. A zero distance means the recorded solutions are identical at every weighted time. $D$ is therefore a metric on distinct recorded solutions, but only a pseudometric on problems: two problems that agree on these samples need not agree for every initial condition.
+
+\paragraph{Interpretation.}
+Within an IC family, $D$ compares equations and BCs from shared initial data. Across families it also measures the change in initial data. A five-frame average is exactly that; we do not claim it equals a continuous-time integral.
+
+\subsection{Dot Products and Normalization}
+\label{app:physical-kernel}
+The physical kernel $K_{i\ell}=F_i^\top F_\ell$ satisfies
+\[
+ D_{i\ell}^2=K_{ii}+K_{\ell\ell}-2K_{i\ell}.
+\]
+For the physical cosine, assume every flattened trajectory is nonzero and set $a_i^{(r)}=f_i^{(r)}/\|f_i^{(r)}\|_2$. Define
+\[
+ S_{i\ell}^{\mathrm{phys}}=\frac1N\sum_r a_i^{(r)\top}a_\ell^{(r)},
+ \qquad A_i=\frac1{\sqrt N}(a_i^{(1)},\ldots,a_i^{(N)}).
+\]
+Then $S_{i\ell}^{\mathrm{phys}}=A_i^\top A_\ell$, $\|A_i\|_2=1$, and
+\[
+ \|A_i-A_\ell\|_2^2=2-2S_{i\ell}^{\mathrm{phys}}.
+\]
+The similarity matrix is positive semidefinite, because
+$\sum_{i,\ell}c_i c_\ell S_{i\ell}^{\mathrm{phys}}=\|\sum_i c_i A_i\|_2^2\geq0$.
+The same argument applies to the averaged embedding dot products of \cref{eq:embedding-score}. Normalizing each trajectory removes its size, so the physical cosine and the RMS distance are different targets and can rank pairs differently. A zero trajectory would have to be reported rather than divided by zero; none occurs here.
+
+\subsection{When Numerical Error Can Change a Ranking}
+\label{app:ranking-error}
+Let $F_i$ be the exact solution and $\widetilde F_i$ its computed version, with $\|F_i-\widetilde F_i\|_2\leq\epsilon_i$. Write $\widetilde D_{i\ell}=\|\widetilde F_i-\widetilde F_\ell\|_2$. The reverse triangle inequality gives
+\[
+ |D_{i\ell}-\widetilde D_{i\ell}|
+ \leq\|(F_i-\widetilde F_i)-(F_\ell-\widetilde F_\ell)\|_2
+ \leq\epsilon_i+\epsilon_\ell.
+\]
+For an anchor $i$ and two candidates $\ell,k$, the condition
+\[
+ \widetilde D_{ik}-\widetilde D_{i\ell}
+ >2\epsilon_i+\epsilon_\ell+\epsilon_k
+\]
+therefore guarantees $D_{i\ell}<D_{ik}$: the largest possible value of the first distance lies below the smallest possible value of the second. A difference between two step sizes or grids is useful evidence, but it is not automatically a rigorous bound. Here the exact target is the solution on the $64\times64$ grid, so only time-stepping and rounding errors enter $\epsilon_i$.
+
+\subsection{Exact Solutions for the Linear Equations}
+\label{app:linear-reference}
+For diffusion and linear exchange, write
+\[
+ U_t=\mathbf D\Delta U+RU,\qquad
+ \mathbf D=\operatorname{diag}(D_u,D_v),\qquad
+ R=0\quad\text{or}\quad
+ R=\kappa\begin{pmatrix}-1&1\\1&-1\end{pmatrix}.
+\]
+On the cell-centered grid with $h=1/n$, the one-dimensional Laplacian has off-diagonal entries $1/h^2$ and interior diagonal entries $-2/h^2$. Periodic boundaries wrap the neighbors. Zero Dirichlet ghost values are the negatives of the adjacent values, giving end diagonals $-3/h^2$. Zero Neumann ghost values copy the adjacent values, giving end diagonals $-1/h^2$.
+
+The eigenvalues are
+\[
+\begin{array}{ll}
+\text{Periodic:}&\lambda_k=-4h^{-2}\sin^2(\pi k/n),\quad k=0,\ldots,n-1,\\[2pt]
+\text{Dirichlet:}&\lambda_k=-4h^{-2}\sin^2(\pi k/(2n)),\quad k=1,\ldots,n,\\[2pt]
+\text{Neumann:}&\lambda_k=-4h^{-2}\sin^2(\pi k/(2n)),\quad k=0,\ldots,n-1.
+\end{array}
+\]
+They follow by substituting the Fourier, cell-centered sine, and cell-centered cosine vectors into the stencils. In two dimensions the eigenvalues add, $\lambda_{k\ell}=\lambda_k+\lambda_\ell$. After transforming both fields to this basis, each two-component coefficient evolves as
+\[
+ \widehat U_{k\ell}(t)
+ =e^{t(R+\lambda_{k\ell}\mathbf D)}\widehat U_{k\ell}(0).
+\]
+This gives the exact grid solution without any time stepping, and it does not require $R$ and $\mathbf D$ to commute. Different BCs use different eigenvectors, so fields are transformed back to the grid before they are compared. Advection--diffusion separates into an $x$ part and a $y$ part, so its exact grid solution is $e^{tA_x}U_0e^{tA_y^\top}$ for each field, where $A_x$ and $A_y$ are the one-dimensional operators.
+
+\paragraph{Continuous test solutions.}
+On the unit interval, the continuous Laplacian has eigenvalues $-4\pi^2k^2$ for periodic modes, and $-\pi^2k^2$ for Dirichlet ($k\geq1$) and Neumann ($k\geq0$) modes; in two dimensions they add. If $\phi$ is such an eigenfunction with eigenvalue $\lambda$, the initial field $U_0(x,y)=\phi(x,y)b$ has the exact solution
+\[
+ U(t,x,y)=\phi(x,y)e^{t(R+\lambda\mathbf D)}b.
+\]
+We use these solutions only to test the solver against the continuous PDE; they are not benchmark initial conditions.
