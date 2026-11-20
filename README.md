@@ -20,11 +20,13 @@ that behave alike. All numbers come from `benchmark/results/analysis.json`.
 ## What is here
 
 This repository holds the code and records of the study behind the ICML 2027
-working manuscript. The manuscript itself is kept on Overleaf. Every number in
-the paper is generated from the files in `benchmark/` by the scripts in
-`scripts/`: `make_tables.py` writes the tables and number macros to
-`sections/generated/`, and `make_figures.py` writes the figures to `figures/`.
-Copy those two folders into the Overleaf project after rerunning the analysis.
+working manuscript. The manuscript is edited on Overleaf; a snapshot of its
+LaTeX source is in `docs/pde_embeddings_overleaf.zip` (upload it to Overleaf
+with New Project → Upload Project). Every number in the paper is generated
+from the files in `benchmark/` by the scripts in `scripts/`: `make_tables.py`
+writes the tables and number macros to `sections/generated/`, and
+`make_figures.py` writes the figures to `figures/`. Copy those two folders
+into the Overleaf project after rerunning the analysis.
 
 **Done at full scale**
 
@@ -92,6 +94,7 @@ benchmark/
     analysis.json               every reported statistic
     model_input_sheets_r000-r009.zip  the 540 images encoded in the main runs
 scripts/                        all code (below)
+docs/pde_embeddings_overleaf.zip  LaTeX source of the paper, ready for Overleaf
 data/                           regenerated arrays and images (not in git)
 ```
 
